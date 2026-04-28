@@ -120,9 +120,7 @@
 
     document.getElementById("imgResult").innerHTML = `
   <img src="${imgUrl}" width="300"><br><br>
-  <a href="${imgUrl}" download target="_blank">
-    <button>⬇️ Download Image</button>
-  </a>
+  <button onclick="downloadImage('${imgUrl}')">⬇️ Download Image</button>
 `;
   } catch (err) {
     document.getElementById("imgResult").innerHTML = "❌ Error generating image";
@@ -131,7 +129,15 @@
     window.generateVideo = function() {
       document.getElementById("vidResult").innerHTML = "⏳ Generating Video...";
     };
+window.downloadImage = async function(url) {
+  const res = await fetch(url);
+  const blob = await res.blob();
 
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "ai-image.png";
+  a.click();
+};
     // 🔥 User detect + UI update
     onAuthStateChanged(auth, (user) => {
       if (user) {
