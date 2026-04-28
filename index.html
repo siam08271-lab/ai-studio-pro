@@ -27,6 +27,17 @@
 
     <img id="profilePic" src="" width="100" style="border-radius:50%; display:none;"><br><br>
 
+    <h3>🚀 AI Tools</h3>
+
+    <button onclick="showImageGen()">🎨 Generate Image</button>
+    <button onclick="showVideoGen()">🎬 Generate Video</button>
+
+    <br><br>
+
+    <div id="toolArea"></div>
+
+    <br>
+
     <button onclick="logout()">Logout</button>
   </div>
 
@@ -77,17 +88,43 @@
       signOut(auth);
     };
 
+    // 🔥 Tool UI Functions
+    window.showImageGen = function() {
+      document.getElementById("toolArea").innerHTML = `
+        <h3>🎨 Image Generator</h3>
+        <input id="imgPrompt" placeholder="Enter prompt"><br><br>
+        <button onclick="generateImage()">Generate</button>
+        <div id="imgResult"></div>
+      `;
+    };
+
+    window.showVideoGen = function() {
+      document.getElementById("toolArea").innerHTML = `
+        <h3>🎬 Video Generator</h3>
+        <input id="vidPrompt" placeholder="Enter prompt"><br><br>
+        <button onclick="generateVideo()">Generate</button>
+        <div id="vidResult"></div>
+      `;
+    };
+
+    // Demo functions (next step এ real API বসাবো)
+    window.generateImage = function() {
+      document.getElementById("imgResult").innerHTML = "⏳ Generating Image...";
+    };
+
+    window.generateVideo = function() {
+      document.getElementById("vidResult").innerHTML = "⏳ Generating Video...";
+    };
+
     // 🔥 User detect + UI update
     onAuthStateChanged(auth, (user) => {
       if (user) {
         document.getElementById("loginPage").style.display = "none";
         document.getElementById("mainPage").style.display = "block";
 
-        // 👉 Name show
         const name = user.displayName || "User";
         document.getElementById("welcomeText").innerText = "Welcome " + name + " 🎉";
 
-        // 👉 Profile pic show
         if (user.photoURL) {
           const img = document.getElementById("profilePic");
           img.src = user.photoURL;
