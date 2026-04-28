@@ -108,10 +108,23 @@
     };
 
     // Demo functions (next step এ real API বসাবো)
-    window.generateImage = function() {
-      document.getElementById("imgResult").innerHTML = "⏳ Generating Image...";
-    };
+    window.generateImage = async function() {
+  const prompt = document.getElementById("imgPrompt").value;
 
+  document.getElementById("imgResult").innerHTML = "⏳ Generating Image...";
+
+  try {
+    const res = await fetch("https://image.pollinations.ai/prompt/" + encodeURIComponent(prompt));
+    
+    const imgUrl = res.url;
+
+    document.getElementById("imgResult").innerHTML = `
+  <img src="${imgUrl}" width="300">
+`;
+  } catch (err) {
+    document.getElementById("imgResult").innerHTML = "❌ Error generating image";
+  }
+};
     window.generateVideo = function() {
       document.getElementById("vidResult").innerHTML = "⏳ Generating Video...";
     };
