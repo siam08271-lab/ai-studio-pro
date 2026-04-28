@@ -1,0 +1,113 @@
+<!DOCTYPE html><html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Studio Pro</title><!-- 🔥 Firebase CDN --><script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script><style>
+body { background:#0f172a; color:white; text-align:center; font-family:sans-serif; }
+.box { background:#1e293b; padding:20px; margin:20px; border-radius:10px; }
+button { padding:10px; margin:10px; border:none; border-radius:5px; cursor:pointer; }
+</style></head>
+<body><h1>🔥 AI Studio Pro</h1><div class="box" id="loginBox">
+  <h2>Login</h2>
+  <button onclick="googleLogin()">Login with Google</button>
+</div><div id="app" style="display:none;"><div class="box">
+  <h2>🖼️ Generate Image</h2>
+  <input id="prompt" placeholder="Enter prompt" />
+  <button onclick="generateImage()">Generate</button>
+  <br>
+  <img id="output" width="300" />
+</div><div class="box">
+  <h2>📁 History</h2>
+  <div id="history"></div>
+</div><button onclick="logout()">Logout</button>
+
+</div><script>
+
+// 🔥 Firebase Config
+const firebaseConfig = {
+  apiKey: "AIzaSyC4zL8cYV8A6sEX6Fm9MKT_SNUyD-pilg",
+  authDomain: "free-ai-33698.firebaseapp.com",
+  projectId: "free-ai-33698",
+  storageBucket: "free-ai-33698.firebasestorage.app",
+  messagingSenderId: "897121643606",
+  appId: "1:897121643606:web:7c21b45297758aa0df5ff7",
+  measurementId: "G-EPHYJLGYRC"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+// 🔐 Google Login
+function googleLogin() {
+  const provider = new firebase.auth.GoogleAuthProvider();
+  auth.signInWithPopup(provider);
+}
+
+// 🚪 Logout
+function logout(){
+  auth.signOut();
+}
+
+// 🔄 User Detect
+auth.onAuthStateChanged(user => {
+  if(user){
+    document.getElementById("loginBox").style.display="none";
+    document.getElementById("app").style.display="block";
+    loadHistory();
+  } else {
+    document.getElementById("loginBox").style.display="block";
+    document.getElementById("app").style.display="none";
+  }
+});
+
+// 🖼️ Dummy Image Generator (later API add হবে)
+function generateImage(){
+  const prompt = document.getElementById("prompt").value;
+  const fakeImage = "https://via.placeholder.com/300?text=" + encodeURIComponent(prompt);
+
+  document.getElementById("output").src = fakeImage;
+
+  saveHistory(prompt, fakeImage);
+}
+
+// 💾 Save History
+function saveHistory(prompt, imageUrl){
+  db.collection("history").add({
+    user: auth.currentUser.uid,
+    prompt: prompt,
+    image: imageUrl,
+    time: Date.now()
+  });
+}
+
+// 📁 Load History
+async function loadHistory(){
+  const div = document.getElementById("history");
+  div.innerHTML = "";
+
+  const snap = await db.collection("history")
+    .where("user","==",auth.currentUser.uid)
+    .get();
+
+  snap.forEach(doc => {
+    const d = doc.data();
+    const item = document.createElement("div");
+
+    item.innerHTML = `
+      <img src="${d.image}" width="100"/><br>
+      <small>${d.prompt}</small><br>
+      <button onclick="deleteItem('${doc.id}')">Delete</button>
+    `;
+
+    div.appendChild(item);
+  });
+}
+
+// 🗑️ Delete
+function deleteItem(id){
+  db.collection("history").doc(id).delete().then(loadHistory);
+}
+
+</script></body>
+</html>
