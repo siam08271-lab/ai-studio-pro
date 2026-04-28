@@ -119,7 +119,10 @@
     const imgUrl = res.url;
 
     document.getElementById("imgResult").innerHTML = `
-  <img src="${imgUrl}" width="300">
+  <img src="${imgUrl}" width="300"><br><br>
+  <a href="${imgUrl}" download target="_blank">
+    <button>⬇️ Download Image</button>
+  </a>
 `;
   } catch (err) {
     document.getElementById("imgResult").innerHTML = "❌ Error generating image";
