@@ -151,9 +151,9 @@
     const checkResult = async () => {
       const check = await fetch(data.urls.get, {
         headers: {
-  "Authorization": "Bearer YOUR_API_KEY"
-        }
-      };
+      "Authorization": "Bearer YOUR_API_KEY"
+      }
+    
       const result = await check.json();
 
       if (result.status === "succeeded") {
