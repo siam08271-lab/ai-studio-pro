@@ -126,9 +126,56 @@
     document.getElementById("imgResult").innerHTML = "❌ Error generating image";
   }
 };
-    window.generateVideo = function() {
-      document.getElementById("vidResult").innerHTML = "⏳ Generating Video...";
+    window.generateVideo = async function() {
+  const prompt = document.getElementById("vidPrompt").value;
+
+  document.getElementById("vidResult").innerHTML = "⏳ Generating Video... (wait 30-60 sec)";
+
+  try {
+    const res = await fetch("https://api.replicate.com/v1/predictions", {
+  method: "POST",
+  headers: {
+  "Authorization": "Bearer YOUR_API_KEY",
+  "Content-Type": "application/json"
+},
+  body: JSON.stringify({
+    version: "6292c1d1b2c7d7c5f4c3b6e0b8b7e3c9f6a1c2d3e4f5a6b7c8d9e0f1",
+    input: {
+      prompt: prompt
+    }
+  })
+});
+
+    const data = await res.json();
+
+    const checkResult = async () => {
+      const check = await fetch(data.urls.get, {
+        headers: {
+  "Authorization": "Bearer YOUR_API_KEY"
+        }
+
+      const result = await check.json();
+
+      if (result.status === "succeeded") {
+        const videoUrl = result.output[0];
+
+        document.getElementById("vidResult").innerHTML = `
+          <video src="${videoUrl}" controls width="300"></video><br><br>
+          <a href="${videoUrl}" download>⬇️ Download Video</a>
+        `;
+      } else if (result.status === "failed") {
+        document.getElementById("vidResult").innerHTML = "❌ Failed to generate video";
+      } else {
+        setTimeout(checkResult, 3000);
+      }
     };
+
+    checkResult();
+
+  } catch (err) {
+    document.getElementById("vidResult").innerHTML = "❌ Error generating video";
+  }
+};
 window.downloadImage = async function(url) {
   const res = await fetch(url);
   const blob = await res.blob();
