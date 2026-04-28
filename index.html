@@ -1,113 +1,93 @@
-<!DOCTYPE html><html lang="en">
+<!DOCTYPE html>
+<html>
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AI Studio Pro</title><!-- 🔥 Firebase CDN --><script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script><style>
-body { background:#0f172a; color:white; text-align:center; font-family:sans-serif; }
-.box { background:#1e293b; padding:20px; margin:20px; border-radius:10px; }
-button { padding:10px; margin:10px; border:none; border-radius:5px; cursor:pointer; }
-</style></head>
-<body><h1>🔥 AI Studio Pro</h1><div class="box" id="loginBox">
-  <h2>Login</h2>
-  <button onclick="googleLogin()">Login with Google</button>
-</div><div id="app" style="display:none;"><div class="box">
-  <h2>🖼️ Generate Image</h2>
-  <input id="prompt" placeholder="Enter prompt" />
-  <button onclick="generateImage()">Generate</button>
-  <br>
-  <img id="output" width="300" />
-</div><div class="box">
-  <h2>📁 History</h2>
-  <div id="history"></div>
-</div><button onclick="logout()">Logout</button>
+  <title>AI Studio Pro</title>
+</head>
 
-</div><script>
+<body>
 
-// 🔥 Firebase Config
-const firebaseConfig = {
-  apiKey: "AIzaSyC4zL8cYV8A6sEX6Fm9MKT_SNUyD-pilg",
-  authDomain: "free-ai-33698.firebaseapp.com",
-  projectId: "free-ai-33698",
-  storageBucket: "free-ai-33698.firebasestorage.app",
-  messagingSenderId: "897121643606",
-  appId: "1:897121643606:web:7c21b45297758aa0df5ff7",
-  measurementId: "G-EPHYJLGYRC"
-};
+  <!-- 🔹 Login Page -->
+  <div id="loginPage">
+    <h2>Login</h2>
 
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db = firebase.firestore();
+    <button onclick="googleLogin()">Login with Google</button>
 
-// 🔐 Google Login
-function googleLogin() {
-  const provider = new firebase.auth.GoogleAuthProvider();
-  auth.signInWithPopup(provider);
-}
+    <br><br>
 
-// 🚪 Logout
-function logout(){
-  auth.signOut();
-}
+    <input type="email" id="email" placeholder="Email"><br><br>
+    <input type="password" id="password" placeholder="Password"><br><br>
 
-// 🔄 User Detect
-auth.onAuthStateChanged(user => {
-  if(user){
-    document.getElementById("loginBox").style.display="none";
-    document.getElementById("app").style.display="block";
-    loadHistory();
-  } else {
-    document.getElementById("loginBox").style.display="block";
-    document.getElementById("app").style.display="none";
-  }
-});
+    <button onclick="emailLogin()">Login with Email</button>
+  </div>
 
-// 🖼️ Dummy Image Generator (later API add হবে)
-function generateImage(){
-  const prompt = document.getElementById("prompt").value;
-  const fakeImage = "https://via.placeholder.com/300?text=" + encodeURIComponent(prompt);
+  <!-- 🔹 Main Page -->
+  <div id="mainPage" style="display:none;">
+    <h2>Welcome User 🎉</h2>
+    <button onclick="logout()">Logout</button>
+  </div>
 
-  document.getElementById("output").src = fakeImage;
 
-  saveHistory(prompt, fakeImage);
-}
+  <!-- 🔥 Firebase + JS -->
+  <script type="module">
 
-// 💾 Save History
-function saveHistory(prompt, imageUrl){
-  db.collection("history").add({
-    user: auth.currentUser.uid,
-    prompt: prompt,
-    image: imageUrl,
-    time: Date.now()
-  });
-}
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { 
+      getAuth, 
+      signInWithPopup, 
+      GoogleAuthProvider,
+      signInWithEmailAndPassword,
+      onAuthStateChanged,
+      signOut
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-// 📁 Load History
-async function loadHistory(){
-  const div = document.getElementById("history");
-  div.innerHTML = "";
+    // 🔥 তোমার Firebase config (তুমি যেটা দিয়েছিলে সেটাই বসালাম)
+    const firebaseConfig = {
+      apiKey: "AIzaSyC4zL8cYV8A6SxEX6Fm9MKT_SNUyD-pilg",
+      authDomain: "free-ai-33698.firebaseapp.com",
+      projectId: "free-ai-33698",
+      storageBucket: "free-ai-33698.firebasestorage.app",
+      messagingSenderId: "897121643606",
+      appId: "1:897121643606:web:7c21b45297758aa0df5ff7",
+      measurementId: "G-EPHYJLGYRC"
+    };
 
-  const snap = await db.collection("history")
-    .where("user","==",auth.currentUser.uid)
-    .get();
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth();
 
-  snap.forEach(doc => {
-    const d = doc.data();
-    const item = document.createElement("div");
+    const provider = new GoogleAuthProvider();
 
-    item.innerHTML = `
-      <img src="${d.image}" width="100"/><br>
-      <small>${d.prompt}</small><br>
-      <button onclick="deleteItem('${doc.id}')">Delete</button>
-    `;
+    // ✅ Google Login
+    window.googleLogin = function() {
+      signInWithPopup(auth, provider)
+        .catch(err => alert(err.message));
+    };
 
-    div.appendChild(item);
-  });
-}
+    // ✅ Email Login
+    window.emailLogin = function() {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
 
-// 🗑️ Delete
-function deleteItem(id){
-  db.collection("history").doc(id).delete().then(loadHistory);
-}
+      signInWithEmailAndPassword(auth, email, password)
+        .catch(err => alert(err.message));
+    };
 
-</script></body>
+    // ✅ Logout
+    window.logout = function() {
+      signOut(auth);
+    };
+
+    // 🔥 MAIN FIX (login loop solve)
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        document.getElementById("loginPage").style.display = "none";
+        document.getElementById("mainPage").style.display = "block";
+      } else {
+        document.getElementById("loginPage").style.display = "block";
+        document.getElementById("mainPage").style.display = "none";
+      }
+    });
+
+  </script>
+
+</body>
 </html>
