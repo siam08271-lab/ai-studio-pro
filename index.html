@@ -1,9 +1,6 @@
-<!DOCTYPE html>
-<html>
+<!DOCTYPE html><html>
 <head>
-  <title>AI Studio Pro</title>
-
-  <style>
+  <title>AI Studio Pro</title>  <style>
     body {
       margin: 0;
       font-family: 'Segoe UI', sans-serif;
@@ -78,55 +75,43 @@
       border-radius:10px;
       margin-top:10px;
     }
-  </style>
-</head>
-
-<body>
-
-<div class="container" id="loginPage">
+  </style></head><body><div class="container" id="loginPage">
   <div class="card">
-    <h2>🚀 AI Studio Pro</h2>
+    <h2>🚀 AI Studio Pro</h2><button onclick="googleLogin()">Continue with Google</button>
 
-    <button onclick="googleLogin()">Continue with Google</button>
+<p>or</p>
 
-    <p>or</p>
+<input id="email" placeholder="Email">
+<input id="password" type="password" placeholder="Password">
 
-    <input id="email" placeholder="Email">
-    <input id="password" type="password" placeholder="Password">
-
-    <button onclick="login()">Login</button>
-    <button class="secondary" onclick="signup()">Create Account</button>
-  </div>
-</div>
-
-<div class="container" id="mainPage" style="display:none;">
-  <div class="card">
-
-    <div style="display:flex;justify-content:space-between;">
-      <h2 id="welcomeText"></h2>
-      <button onclick="toggleMenu()" style="width:auto;">⋮</button>
-    </div>
-
-    <div id="menu">
-      <button onclick="showHistory()">🕓 History</button>
-      <button onclick="showCoins()">💰 Coins</button>
-      <button onclick="clearHistory()">❌ Clear</button>
-      <button onclick="logout()">🚪 Logout</button>
-    </div>
-
-    <div class="section">
-      <button onclick="showImageGen()">🎨 Image Generator</button>
-      <button onclick="showVideo()">🎬 Video Generator</button>
-    </div>
-
-    <div id="toolArea"></div>
-
-    <button class="secondary" onclick="downloadLast()">⬇️ Download Last Image</button>
+<button onclick="login()">Login</button>
+<button class="secondary" onclick="signup()">Create Account</button>
 
   </div>
+</div><div class="container" id="mainPage" style="display:none;">
+  <div class="card"><div style="display:flex;justify-content:space-between;">
+  <h2 id="welcomeText"></h2>
+  <button onclick="toggleMenu()" style="width:auto;">⋮</button>
 </div>
 
-<script type="module">
+<div id="menu">
+  <button onclick="showHistory()">🕓 History</button>
+  <button onclick="showCoins()">💰 Coins</button>
+  <button onclick="clearHistory()">❌ Clear</button>
+  <button onclick="logout()">🚪 Logout</button>
+</div>
+
+<div class="section">
+  <button onclick="showImageGen()">🎨 Image Generator</button>
+  <button onclick="showVideo()">🎬 Video Generator</button>
+</div>
+
+<div id="toolArea"></div>
+
+<button class="secondary" onclick="downloadLast()">⬇️ Download Last Image</button>
+
+  </div>
+</div><script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
@@ -134,16 +119,23 @@ import {
   GoogleAuthProvider,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
-  signInWithPopup,
+  signInWithRedirect,
   onAuthStateChanged,
   signOut
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-const app = initializeApp({
-  apiKey: "AIzaSyC...",
-  authDomain: "free-ai-33698.firebaseapp.com"
-});
+// ✅ YOUR FIXED CONFIG
+const firebaseConfig = {
+  apiKey: "AIzaSyC4zL8cYV8A6SxEX6Fm9MKT_SNUyD-pilg",
+  authDomain: "free-ai-33698.firebaseapp.com",
+  projectId: "free-ai-33698",
+  storageBucket: "free-ai-33698.firebasestorage.app",
+  messagingSenderId: "897121643606",
+  appId: "1:897121643606:web:d4f825f3a327e590df5ff7",
+  measurementId: "G-BMHLEYVKSY"
+};
 
+const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 
@@ -171,9 +163,9 @@ window.signup = () => {
     .catch(e => alert(e.message));
 };
 
+// ✅ FIXED GOOGLE LOGIN
 window.googleLogin = () => {
-  signInWithPopup(auth, provider)
-    .catch(e => alert(e.message));
+  signInWithRedirect(auth, provider);
 };
 
 window.logout = () => signOut(auth);
@@ -183,72 +175,35 @@ window.showImageGen = () => {
     <div class="section">
       <h3>🎨 Image Generator</h3>
       <p>Used: ${used}/${limit}</p>
-      <textarea id="prompt" placeholder="Write prompt..."></textarea>
-      <button onclick="generate()">Generate</button>
-      <div id="result"></div>
-    </div>
-  `;
-};
+      <textarea id="prompt" placeholder="Write prompt..."></textarea><button onclick="generate()">Generate</button>
+  <div id="result"></div>
+</div>
 
-window.generate = () => {
-  const prompt = document.getElementById("prompt").value;
-  const url = "https://image.pollinations.ai/prompt/" + encodeURIComponent(prompt);
+`; };
 
-  localStorage.setItem("lastImage", url);
+window.generate = () => { const prompt = document.getElementById("prompt").value; const url = "https://image.pollinations.ai/prompt/" + encodeURIComponent(prompt);
 
-  let history = JSON.parse(localStorage.getItem("history")) || [];
-  history.unshift(url);
-  localStorage.setItem("history", JSON.stringify(history));
+localStorage.setItem("lastImage", url);
 
-  document.getElementById("result").innerHTML = `<img src="${url}">`;
+let history = JSON.parse(localStorage.getItem("history")) || []; history.unshift(url); localStorage.setItem("history", JSON.stringify(history));
 
-  used++;
-};
+document.getElementById("result").innerHTML = <img src="${url}">;
 
-window.showHistory = () => {
-  let history = JSON.parse(localStorage.getItem("history")) || [];
-  let html = "<h3>History</h3>";
-  history.forEach(img => {
-    html += `<img src="${img}">`;
-  });
-  toolArea.innerHTML = html;
-};
+used++; };
 
-window.showCoins = () => {
-  toolArea.innerHTML = `<h3>Usage</h3><p>${used}/${limit}</p>`;
-};
+window.showHistory = () => { let history = JSON.parse(localStorage.getItem("history")) || []; let html = "<h3>History</h3>"; history.forEach(img => { html += <img src="${img}">; }); toolArea.innerHTML = html; };
 
-window.clearHistory = () => {
-  localStorage.removeItem("history");
-  alert("Cleared");
-};
+window.showCoins = () => { toolArea.innerHTML = <h3>Usage</h3><p>${used}/${limit}</p>; };
 
-window.downloadLast = () => {
-  const url = localStorage.getItem("lastImage");
-  if (!url) return alert("No image");
+window.clearHistory = () => { localStorage.removeItem("history"); alert("Cleared"); };
 
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "image.png";
-  a.click();
-};
+window.downloadLast = () => { const url = localStorage.getItem("lastImage"); if (!url) return alert("No image");
 
-window.showVideo = () => {
-  toolArea.innerHTML = "<h3>🎬 Coming Soon</h3>";
-};
+const a = document.createElement("a"); a.href = url; a.download = "image.png"; a.click(); };
 
-onAuthStateChanged(auth, user => {
-  if (user) {
-    loginPage.style.display = "none";
-    mainPage.style.display = "flex";
-    welcomeText.innerText = "Welcome " + user.email;
-  } else {
-    loginPage.style.display = "flex";
-    mainPage.style.display = "none";
-  }
-});
+window.showVideo = () => { toolArea.innerHTML = "<h3>🎬 Coming Soon</h3>"; };
 
-</script>
+onAuthStateChanged(auth, user => { if (user) { loginPage.style.display = "none"; mainPage.style.display = "flex"; welcomeText.innerText = "Welcome " + user.email; } else { loginPage.style.display = "flex"; mainPage.style.display = "none"; } });
 
-</body>
+</script></body>
 </html>
