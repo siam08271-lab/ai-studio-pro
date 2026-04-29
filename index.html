@@ -6,8 +6,9 @@
   <style>
     body {
       margin: 0;
-      font-family: Arial, sans-serif;
+      font-family: 'Segoe UI', sans-serif;
       background: linear-gradient(135deg, #667eea, #764ba2);
+      color: #333;
     }
 
     .container {
@@ -15,24 +16,31 @@
       justify-content: center;
       align-items: flex-start;
       height: 100vh;
-      padding-top: 80px;
+      padding-top: 60px;
     }
 
     .card {
-      background: white;
+      background: rgba(255,255,255,0.15);
+      backdrop-filter: blur(15px);
       padding: 25px;
       border-radius: 20px;
       width: 320px;
       text-align: center;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+      color: white;
+    }
+
+    h2 {
+      margin-bottom: 10px;
     }
 
     input {
       width: 100%;
       padding: 10px;
-      margin: 8px 0;
+      margin: 6px 0;
       border-radius: 10px;
-      border: 1px solid #ccc;
+      border: none;
+      outline: none;
     }
 
     button {
@@ -41,160 +49,188 @@
       margin-top: 10px;
       border: none;
       border-radius: 10px;
-      background: #667eea;
+      background: #6c63ff;
       color: white;
       font-weight: bold;
       cursor: pointer;
+      transition: 0.3s;
     }
 
     button:hover {
-      background: #5a67d8;
+      background: #5a52e0;
     }
 
     .secondary {
-      background: #eee;
-      color: #333;
+      background: #ffffff33;
     }
+
+    img {
+      border-radius: 50%;
+    }
+
+    .small {
+      font-size: 13px;
+      opacity: 0.8;
+      cursor: pointer;
+    }
+
   </style>
 </head>
 
 <body>
 
-  <!-- LOGIN -->
-  <div class="container" id="loginPage">
-    <div class="card">
-      <h2>🔐 Login</h2>
+<!-- LOGIN -->
+<div class="container" id="loginPage">
+  <div class="card">
 
-      <button onclick="googleLogin()">Login with Google</button>
+    <h2>🚀 AI Studio Pro</h2>
+    <p>Login / Signup</p>
 
-      <p>or</p>
+    <button onclick="googleLogin()">Continue with Google</button>
 
-      <input type="email" id="email" placeholder="Email">
-      <input type="password" id="password" placeholder="Password">
+    <p class="small">or</p>
 
-      <button onclick="emailLogin()">Login with Email</button>
-    </div>
+    <input type="email" id="email" placeholder="Email">
+    <input type="password" id="password" placeholder="Password">
+
+    <button onclick="login()">Login</button>
+    <button class="secondary" onclick="signup()">Create Account</button>
+
   </div>
+</div>
 
-  <!-- MAIN -->
-  <div class="container" id="mainPage" style="display:none;">
-    <div class="card">
+<!-- MAIN APP -->
+<div class="container" id="mainPage" style="display:none;">
+  <div class="card">
 
-      <h2 id="welcomeText">Welcome 🎉</h2>
-      <img id="profilePic" width="80" style="display:none;"><br><br>
+    <h2 id="welcomeText">Welcome</h2>
+    <img id="profilePic" width="80" style="display:none;"><br><br>
 
-      <button onclick="showImageGen()">🎨 Generate Image</button>
-      <button onclick="showVideoGen()">🎬 Generate Video</button>
+    <button onclick="showImageGen()">🎨 Generate Image</button>
+    <button onclick="showVideo()">🎬 Generate Video</button>
 
-      <div id="toolArea"></div>
+    <div id="toolArea"></div>
 
-      <button class="secondary" onclick="logout()">Logout</button>
+    <button class="secondary" onclick="logout()">Logout</button>
 
-    </div>
   </div>
+</div>
 
-  <script type="module">
+<script type="module">
 
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { 
-      getAuth, 
-      signInWithRedirect,
-      GoogleAuthProvider,
-      signInWithEmailAndPassword,
-      onAuthStateChanged,
-      signOut
-    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {
+  getAuth,
+  signInWithRedirect,
+  GoogleAuthProvider,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  onAuthStateChanged,
+  signOut
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyC4zL8cYV8A6SxEX6Fm9MKT_SNUyD-pilg",
-      authDomain: "free-ai-33698.firebaseapp.com",
-      projectId: "free-ai-33698",
-      storageBucket: "free-ai-33698.firebasestorage.app",
-      messagingSenderId: "897121643606",
-      appId: "1:897121643606:web:7c21b45297758aa0df5ff7"
-    };
+const firebaseConfig = {
+  apiKey: "AIzaSyC4zL8cYV8A6SxEX6Fm9MKT_SNUyD-pilg",
+  authDomain: "free-ai-33698.firebaseapp.com",
+  projectId: "free-ai-33698",
+  storageBucket: "free-ai-33698.firebasestorage.app",
+  messagingSenderId: "897121643606",
+  appId: "1:897121643606:web:7c21b45297758aa0df5ff7"
+};
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const provider = new GoogleAuthProvider();
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const provider = new GoogleAuthProvider();
 
-    // LOGIN
-    window.googleLogin = function() {
-      signInWithRedirect(auth, provider);
-    };
+// 🔐 Google Login
+window.googleLogin = function() {
+  signInWithRedirect(auth, provider);
+};
 
-    window.emailLogin = function() {
-      const email = document.getElementById("email").value;
-      const password = document.getElementById("password").value;
+// 🔐 Email Login
+window.login = function() {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
 
-      signInWithEmailAndPassword(auth, email, password)
-        .catch(err => alert(err.message));
-    };
+  signInWithEmailAndPassword(auth, email, password)
+    .catch(err => alert(err.message));
+};
 
-    window.logout = function() {
-      signOut(auth);
-    };
+// 🔐 Signup
+window.signup = function() {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
 
-    // IMAGE TOOL
-    window.showImageGen = function() {
-      document.getElementById("toolArea").innerHTML = `
-        <h3>🎨 Image Generator</h3>
-        <input id="imgPrompt" placeholder="Enter prompt"><br>
-        <button onclick="generateImage()">Generate</button>
-        <div id="imgResult"></div>
-      `;
-    };
+  createUserWithEmailAndPassword(auth, email, password)
+    .then(() => alert("Account Created ✅"))
+    .catch(err => alert(err.message));
+};
 
-    window.generateImage = function() {
-      const prompt = document.getElementById("imgPrompt").value;
-      const url = "https://image.pollinations.ai/prompt/" + encodeURIComponent(prompt);
+// 🚪 Logout
+window.logout = function() {
+  signOut(auth);
+};
 
-      document.getElementById("imgResult").innerHTML = `
-        <p>⏳ Generating...</p>
-        <img src="${url}" width="100%"><br><br>
-        <button onclick="downloadImage('${url}')">⬇️ Download</button>
-      `;
-    };
+// 🎨 Image Tool
+window.showImageGen = function() {
+  document.getElementById("toolArea").innerHTML = `
+    <h3>🎨 Image Generator</h3>
+    <input id="prompt" placeholder="Enter prompt">
+    <button onclick="generate()">Generate</button>
+    <div id="result"></div>
+  `;
+};
 
-    window.downloadImage = async function(url) {
-      const res = await fetch(url);
-      const blob = await res.blob();
+window.generate = function() {
+  const prompt = document.getElementById("prompt").value;
+  const url = "https://image.pollinations.ai/prompt/" + encodeURIComponent(prompt);
 
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(blob);
-      a.download = "ai-image.png";
-      a.click();
-    };
+  document.getElementById("result").innerHTML = `
+    <p>⏳ Generating...</p>
+    <img src="${url}" width="100%"><br><br>
+    <button onclick="download('${url}')">⬇️ Download</button>
+  `;
+};
 
-    // VIDEO TOOL (SAFE VERSION)
-    window.showVideoGen = function() {
-      document.getElementById("toolArea").innerHTML = `
-        <h3>🎬 Video Generator</h3>
-        <p>🚧 Coming Soon...</p>
-      `;
-    };
+window.download = async function(url) {
+  const res = await fetch(url);
+  const blob = await res.blob();
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "image.png";
+  a.click();
+};
 
-    // AUTH STATE
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        document.getElementById("loginPage").style.display = "none";
-        document.getElementById("mainPage").style.display = "flex";
+// 🎬 Video (Coming Soon)
+window.showVideo = function() {
+  document.getElementById("toolArea").innerHTML = `
+    <h3>🎬 Video Generator</h3>
+    <p>🚧 Coming Soon (Premium Feature)</p>
+  `;
+};
 
-        document.getElementById("welcomeText").innerText = "Welcome " + (user.displayName || "User");
+// 👤 Auth State
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    document.getElementById("loginPage").style.display = "none";
+    document.getElementById("mainPage").style.display = "flex";
 
-        if (user.photoURL) {
-          const img = document.getElementById("profilePic");
-          img.src = user.photoURL;
-          img.style.display = "block";
-        }
+    document.getElementById("welcomeText").innerText =
+      "Welcome " + (user.displayName || user.email);
 
-      } else {
-        document.getElementById("loginPage").style.display = "flex";
-        document.getElementById("mainPage").style.display = "none";
-      }
-    });
+    if (user.photoURL) {
+      const img = document.getElementById("profilePic");
+      img.src = user.photoURL;
+      img.style.display = "block";
+    }
 
-  </script>
+  } else {
+    document.getElementById("loginPage").style.display = "flex";
+    document.getElementById("mainPage").style.display = "none";
+  }
+});
+
+</script>
 
 </body>
 </html>
