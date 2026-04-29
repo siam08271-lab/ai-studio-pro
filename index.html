@@ -30,10 +30,6 @@
       color: white;
     }
 
-    h2 {
-      margin-bottom: 10px;
-    }
-
     input {
       width: 100%;
       padding: 10px;
@@ -53,11 +49,6 @@
       color: white;
       font-weight: bold;
       cursor: pointer;
-      transition: 0.3s;
-    }
-
-    button:hover {
-      background: #5a52e0;
     }
 
     .secondary {
@@ -68,10 +59,20 @@
       border-radius: 50%;
     }
 
-    .small {
-      font-size: 13px;
-      opacity: 0.8;
-      cursor: pointer;
+    /* 🔥 Loader */
+    .loader {
+      border: 4px solid #ffffff44;
+      border-top: 4px solid white;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      animation: spin 1s linear infinite;
+      margin: auto;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
     }
 
   </style>
@@ -79,27 +80,22 @@
 
 <body>
 
-<!-- LOGIN -->
 <div class="container" id="loginPage">
   <div class="card">
-
     <h2>🚀 AI Studio Pro</h2>
-    <p>Login / Signup</p>
 
     <button onclick="googleLogin()">Continue with Google</button>
 
-    <p class="small">or</p>
+    <p>or</p>
 
     <input type="email" id="email" placeholder="Email">
     <input type="password" id="password" placeholder="Password">
 
     <button onclick="login()">Login</button>
     <button class="secondary" onclick="signup()">Create Account</button>
-
   </div>
 </div>
 
-<!-- MAIN APP -->
 <div class="container" id="mainPage" style="display:none;">
   <div class="card">
 
@@ -142,6 +138,10 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 
+// 🔥 LIMIT SYSTEM
+let limit = 10;
+let used = 0;
+
 // 🔐 Google Login
 window.googleLogin = function() {
   signInWithRedirect(auth, provider);
@@ -175,6 +175,7 @@ window.logout = function() {
 window.showImageGen = function() {
   document.getElementById("toolArea").innerHTML = `
     <h3>🎨 Image Generator</h3>
+    <p id="counter">Used: ${used} / ${limit}</p>
     <input id="prompt" placeholder="Enter prompt">
     <button onclick="generate()">Generate</button>
     <div id="result"></div>
@@ -182,14 +183,31 @@ window.showImageGen = function() {
 };
 
 window.generate = function() {
+
+  if (used >= limit) {
+    document.getElementById("result").innerHTML =
+      "<p style='color:red;'>🚫 Daily limit reached</p>";
+    return;
+  }
+
   const prompt = document.getElementById("prompt").value;
   const url = "https://image.pollinations.ai/prompt/" + encodeURIComponent(prompt);
 
   document.getElementById("result").innerHTML = `
-    <p>⏳ Generating...</p>
-    <img src="${url}" width="100%"><br><br>
-    <button onclick="download('${url}')">⬇️ Download</button>
+    <div class="loader"></div>
+    <p>Generating...</p>
   `;
+
+  setTimeout(() => {
+    used++;
+
+    document.getElementById("counter").innerText = `Used: ${used} / ${limit}`;
+
+    document.getElementById("result").innerHTML = `
+      <img src="${url}" width="100%"><br><br>
+      <button onclick="download('${url}')">⬇️ Download</button>
+    `;
+  }, 1500);
 };
 
 window.download = async function(url) {
@@ -201,7 +219,7 @@ window.download = async function(url) {
   a.click();
 };
 
-// 🎬 Video (Coming Soon)
+// 🎬 Video
 window.showVideo = function() {
   document.getElementById("toolArea").innerHTML = `
     <h3>🎬 Video Generator</h3>
@@ -209,7 +227,7 @@ window.showVideo = function() {
   `;
 };
 
-// 👤 Auth State
+// 👤 Auth
 onAuthStateChanged(auth, (user) => {
   if (user) {
     document.getElementById("loginPage").style.display = "none";
