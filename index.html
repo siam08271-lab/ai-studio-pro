@@ -24,6 +24,7 @@
       width:90%;
       max-width:600px;
       color:white;
+      position:relative;
     }
     input, textarea {
       width:100%;
@@ -46,6 +47,25 @@
       margin-top:10px;
       border-radius:10px;
     }
+    .menu {
+      position:absolute;
+      right:20px;
+      top:20px;
+    }
+    .menu-box {
+      display:none;
+      position:absolute;
+      right:0;
+      top:40px;
+      background:white;
+      color:black;
+      border-radius:10px;
+      padding:10px;
+    }
+    .menu-box div {
+      padding:8px;
+      cursor:pointer;
+    }
   </style>
 </head>
 
@@ -61,7 +81,6 @@
 
     <button onclick="register()">Create Account</button>
     <button onclick="login()">Login</button>
-
   </div>
 </div>
 
@@ -69,11 +88,17 @@
 <div class="container" id="mainPage" style="display:none;">
   <div class="card">
 
-    <div style="display:flex;justify-content:space-between;">
-      <h2 id="welcomeText"></h2>
-      <button onclick="logout()" style="width:auto;">🚪</button>
+    <div class="menu">
+      <button onclick="toggleMenu()" style="width:auto;">⋮</button>
+
+      <div id="menuBox" class="menu-box">
+        <div onclick="showHistory()">📜 History</div>
+        <div onclick="clearHistory()">🗑 Clear</div>
+        <div onclick="logout()">🚪 Logout</div>
+      </div>
     </div>
 
+    <h2 id="welcomeText"></h2>
     <h3 id="coinText"></h3>
 
     <textarea id="prompt" placeholder="Type prompt..."></textarea>
@@ -122,16 +147,12 @@ const db = getFirestore(app);
 let coins = 0;
 let userId = null;
 
-// 🔥 keep login after refresh
 await setPersistence(auth, browserLocalPersistence);
 
 // REGISTER
 window.register = async () => {
-  const email = emailInput();
-  const pass = passInput();
-
   try {
-    await createUserWithEmailAndPassword(auth, email, pass);
+    await createUserWithEmailAndPassword(auth, email.value, password.value);
     alert("Account created!");
   } catch (e) {
     alert(e.message);
@@ -140,11 +161,8 @@ window.register = async () => {
 
 // LOGIN
 window.login = async () => {
-  const email = emailInput();
-  const pass = passInput();
-
   try {
-    await signInWithEmailAndPassword(auth, email, pass);
+    await signInWithEmailAndPassword(auth, email.value, password.value);
   } catch (e) {
     alert(e.message);
   }
@@ -182,6 +200,8 @@ window.generate = async () => {
 
   const url = "https://image.pollinations.ai/prompt/" + encodeURIComponent(prompt);
 
+  saveHistory(url);
+
   result.innerHTML += `
     <div style="position:relative;">
       <img src="${url}">
@@ -213,6 +233,33 @@ window.shareImage = (url) => {
   }
 };
 
+// MENU
+window.toggleMenu = () => {
+  menuBox.style.display = menuBox.style.display === "block" ? "none" : "block";
+};
+
+// HISTORY
+function saveHistory(url){
+  let list = JSON.parse(localStorage.getItem("history") || "[]");
+  list.unshift(url);
+  localStorage.setItem("history", JSON.stringify(list));
+}
+
+window.showHistory = () => {
+  let list = JSON.parse(localStorage.getItem("history") || "[]");
+
+  result.innerHTML = "";
+
+  list.forEach(url => {
+    result.innerHTML += `<img src="${url}">`;
+  });
+};
+
+window.clearHistory = () => {
+  localStorage.removeItem("history");
+  result.innerHTML = "";
+};
+
 // AUTH STATE
 onAuthStateChanged(auth, async (user)=>{
 
@@ -229,14 +276,6 @@ onAuthStateChanged(auth, async (user)=>{
   }
 
 });
-
-// helpers
-function emailInput(){
-  return document.getElementById("email").value;
-}
-function passInput(){
-  return document.getElementById("password").value;
-}
 
 </script>
 
