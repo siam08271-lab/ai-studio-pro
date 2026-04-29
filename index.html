@@ -1,9 +1,6 @@
-<!DOCTYPE html>
-<html>
+<!DOCTYPE html><html>
 <head>
-  <title>AI Studio Pro</title>
-
-  <style>
+  <title>AI Studio Pro</title>  <style>
     body {
       margin: 0;
       font-family: 'Segoe UI', sans-serif;
@@ -75,60 +72,59 @@
       border-radius: 15px;
     }
 
-    .loader {
-      border: 4px solid #ffffff44;
-      border-top: 4px solid white;
-      border-radius: 50%;
-      width: 30px;
-      height: 30px;
-      animation: spin 1s linear infinite;
-      margin: auto;
+    #menu {
+      display:none;
+      margin-top:10px;
+      background:#000000cc;
+      padding:15px;
+      border-radius:15px;
     }
 
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
+    #menu button {
+      width:100%;
+      margin:6px 0;
     }
-  </style>
-</head>
 
-<body>
-
-<div class="container" id="loginPage">
+  </style></head><body><div class="container" id="loginPage">
   <div class="card">
-    <h2>🚀 AI Studio Pro</h2>
+    <h2>🚀 AI Studio Pro</h2><button onclick="googleLogin()">Continue with Google</button>
 
-    <button onclick="googleLogin()">Continue with Google</button>
+<p>or</p>
 
-    <p>or</p>
+<input type="email" id="email" placeholder="Email">
+<input type="password" id="password" placeholder="Password">
 
-    <input type="email" id="email" placeholder="Email">
-    <input type="password" id="password" placeholder="Password">
-
-    <button onclick="login()">Login</button>
-    <button class="secondary" onclick="signup()">Create Account</button>
-  </div>
-</div>
-
-<div class="container" id="mainPage" style="display:none;">
-  <div class="card">
-
-    <h2 id="welcomeText">Welcome</h2>
-    <img id="profilePic" width="80" style="display:none; border-radius:50%;"><br>
-
-    <div class="section">
-      <button onclick="showImageGen()">🎨 Image Generator</button>
-      <button onclick="showVideo()">🎬 Video Generator</button>
-    </div>
-
-    <div id="toolArea"></div>
-
-    <button class="secondary" onclick="logout()">Logout</button>
+<button onclick="login()">Login</button>
+<button class="secondary" onclick="signup()">Create Account</button>
 
   </div>
+</div><div class="container" id="mainPage" style="display:none;">
+  <div class="card"><div style="display:flex; justify-content:space-between; align-items:center;">
+  <h2 id="welcomeText">Welcome</h2>
+  <button onclick="toggleMenu()" style="width:auto;">⋮</button>
 </div>
 
-<script type="module">
+<div id="menu">
+  <button onclick="showHistory()">🕓 History</button>
+  <button onclick="showCoins()">💰 Coins / Limit</button>
+  <button onclick="showSettings()">⚙️ Settings</button>
+  <button onclick="clearHistory()" style="background:#ff4444;">❌ Clear History</button>
+  <button onclick="logout()" style="background:#ff8800;">🚪 Logout</button>
+</div>
+
+<img id="profilePic" width="80" style="display:none; border-radius:50%;"><br>
+
+<div class="section">
+  <button onclick="showImageGen()">🎨 Image Generator</button>
+  <button onclick="showVideo()">🎬 Video Generator</button>
+</div>
+
+<div id="toolArea"></div>
+
+<button class="secondary" onclick="downloadLast()">⬇️ Download Last Image</button>
+
+  </div>
+</div><script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
@@ -157,137 +153,67 @@ const provider = new GoogleAuthProvider();
 let limit = 10;
 let used = 0;
 
-// Google Login
+function toggleMenu(){
+  const m = document.getElementById("menu");
+  m.style.display = m.style.display === "none" ? "block" : "none";
+}
+
 window.googleLogin = function() {
-  signInWithPopup(auth, provider)
-    .catch(err => alert(err.message));
+  signInWithPopup(auth, provider).catch(err => alert(err.message));
 };
 
-// Email Login
 window.login = function() {
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
-
-  signInWithEmailAndPassword(auth, email, password)
-    .catch(err => alert(err.message));
+  signInWithEmailAndPassword(auth,
+    email.value,
+    password.value
+  ).catch(err => alert(err.message));
 };
 
-// Signup
 window.signup = function() {
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
-
-  createUserWithEmailAndPassword(auth, email, password)
-    .then(() => alert("Account Created ✅"))
-    .catch(err => alert(err.message));
+  createUserWithEmailAndPassword(auth,
+    email.value,
+    password.value
+  ).catch(err => alert(err.message));
 };
 
-window.logout = function() {
-  signOut(auth);
-};
+window.logout = function() { signOut(auth); };
 
-// 🎨 Image Section
 window.showImageGen = function() {
   document.getElementById("toolArea").innerHTML = `
     <div class="section">
       <h3>🎨 Image Generator</h3>
       <p id="counter">Used: ${used} / ${limit}</p>
 
-      <textarea id="prompt" placeholder="Write detailed prompt here..."></textarea>
+      <textarea id="prompt"></textarea><button onclick="generate()">Generate</button>
+  <div id="result"></div>
+</div>
 
-      <button onclick="generate()">Generate Image</button>
+`; };
 
-      <div id="result"></div>
-    </div>
-  `;
+window.generate = function(){ const prompt = document.getElementById("prompt").value; const url = "https://image.pollinations.ai/prompt/" + encodeURIComponent(prompt);
 
-  // 🔥 Load last image
-  const last = localStorage.getItem("lastImage");
-  if (last) {
-    document.getElementById("result").innerHTML = `
-      <p>🕓 Last Generated:</p>
-      <img src="${last}">
-    `;
-  }
-};
+let history = JSON.parse(localStorage.getItem("history")) || []; history.unshift(url); localStorage.setItem("history", JSON.stringify(history));
 
-window.generate = function() {
+// save last image localStorage.setItem("lastImage", url);
 
-  if (used >= limit) {
-    document.getElementById("result").innerHTML =
-      "<p style='color:red;'>🚫 Daily limit reached</p>";
-    return;
-  }
+used++;
 
-  const prompt = document.getElementById("prompt").value;
-  const url = "https://image.pollinations.ai/prompt/" + encodeURIComponent(prompt);
+result.innerHTML = <img src="${url}">; };
 
-  document.getElementById("result").innerHTML = `
-    <div class="loader"></div>
-    <p>Generating...</p>
-  `;
+function showHistory(){ let history = JSON.parse(localStorage.getItem("history")) || []; let html = "<h3>History</h3>"; history.forEach(img=> html += <img src="${img}">); toolArea.innerHTML = html; }
 
-  setTimeout(() => {
-    used++;
+function showCoins(){ toolArea.innerHTML = <h3>Usage</h3><p>${used}/${limit}</p>; }
 
-    // 🔥 SAVE IMAGE
-    localStorage.setItem("lastImage", url);
+function showSettings(){ toolArea.innerHTML = <h3>Settings</h3><p>Coming soon</p>; }
 
-    document.getElementById("counter").innerText = `Used: ${used} / ${limit}`;
+function clearHistory(){ localStorage.removeItem("history"); alert("Cleared"); }
 
-    document.getElementById("result").innerHTML = `
-      <img src="${url}">
-      <button onclick="download('${url}')">⬇️ Download</button>
-    `;
-  }, 1500);
-};
+function downloadLast(){ const url = localStorage.getItem("lastImage"); if(!url){ alert("No image yet"); return; } const a = document.createElement("a"); a.href = url; a.download = "image.png"; a.click(); }
 
-window.download = async function(url) {
-  const res = await fetch(url);
-  const blob = await res.blob();
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = "image.png";
-  a.click();
-};
+window.showVideo = function(){ toolArea.innerHTML = "Coming soon"; };
 
-// 🎬 Video Section
-window.showVideo = function() {
-  document.getElementById("toolArea").innerHTML = `
-    <div class="section">
-      <h3>🎬 Video Generator</h3>
-
-      <textarea placeholder="Describe your video..."></textarea>
-
-      <button disabled style="background:#999;">Coming Soon</button>
-
-      <p style="font-size:14px;">🚧 Video feature will be added soon</p>
-    </div>
-  `;
-};
-
-// Auth State
-onAuthStateChanged(auth, (user) => {
-  if (user) {
-    document.getElementById("loginPage").style.display = "none";
-    document.getElementById("mainPage").style.display = "flex";
-
-    document.getElementById("welcomeText").innerText =
-      "Welcome " + (user.displayName || user.email);
-
-    if (user.photoURL) {
-      const img = document.getElementById("profilePic");
-      img.src = user.photoURL;
-      img.style.display = "block";
-    }
-
-  } else {
-    document.getElementById("loginPage").style.display = "flex";
-    document.getElementById("mainPage").style.display = "none";
-  }
-});
+onAuthStateChanged(auth, (user)=>{ if(user){ loginPage.style.display="none"; mainPage.style.display="flex"; welcomeText.innerText="Welcome " + user.email; }else{ loginPage.style.display="flex"; mainPage.style.display="none"; } });
 
 </script>
-
 </body>
 </html>
