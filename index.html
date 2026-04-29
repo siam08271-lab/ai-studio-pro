@@ -77,6 +77,8 @@
 
     <div id="menu">
       <button onclick="showCoins()">💰 Coins</button>
+      <button onclick="showImageGen()">🎨 Image Generator</button>
+      <button onclick="showHistory()">🖼 History</button>
       <button onclick="logout()">🚪 Logout</button>
     </div>
 
@@ -122,11 +124,10 @@ const provider = new GoogleAuthProvider();
 
 let coins = 0;
 let userId = null;
+let history = [];
 
-// REDIRECT
 getRedirectResult(auth);
 
-// LOGIN
 window.login = () => {
   signInWithEmailAndPassword(auth,email.value,password.value)
   .catch(e=>alert(e.message));
@@ -143,12 +144,10 @@ window.googleLogin = () => {
 
 window.logout = () => signOut(auth);
 
-// MENU
 window.toggleMenu = () => {
   menu.style.display = menu.style.display=="block"?"none":"block";
 };
 
-// LOAD USER DATA
 async function loadUser(user){
   userId = user.uid;
   const ref = doc(db,"users",userId);
@@ -162,12 +161,11 @@ async function loadUser(user){
   }
 }
 
-// IMAGE TOOL
 window.showImageGen = () => {
   toolArea.innerHTML = `
     <div class="section">
-      <h3>Coins: ${coins}</h3>
-      <textarea id="prompt"></textarea>
+      <h3 id="coinText">Coins: ${coins}</h3>
+      <textarea id="prompt" placeholder="Type prompt..."></textarea>
       <button onclick="generate()">Generate</button>
       <div id="result"></div>
     </div>
@@ -184,7 +182,10 @@ window.generate = async () => {
   const prompt = document.getElementById("prompt").value;
   const url = "https://image.pollinations.ai/prompt/"+encodeURIComponent(prompt);
 
-  document.getElementById("result").innerHTML = `<img src="${url}">`;
+  // ADD image (not remove previous)
+  document.getElementById("result").innerHTML += `<img src="${url}">`;
+
+  history.push(url);
 
   coins--;
 
@@ -192,15 +193,23 @@ window.generate = async () => {
     coins: coins
   });
 
-  showImageGen();
+  document.getElementById("coinText").innerText = "Coins: " + coins;
 };
 
-// COINS
+window.showHistory = () => {
+  let html = "<h3>History</h3>";
+
+  history.forEach(img=>{
+    html += `<img src="${img}">`;
+  });
+
+  toolArea.innerHTML = html;
+};
+
 window.showCoins = () => {
   toolArea.innerHTML = `<h3>Coins: ${coins}</h3>`;
 };
 
-// AUTH
 onAuthStateChanged(auth, async user=>{
   if(user){
     loginPage.style.display="none";
