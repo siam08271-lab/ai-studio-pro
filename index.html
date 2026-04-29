@@ -25,6 +25,13 @@
       max-width:600px;
       color:white;
     }
+    input, textarea {
+      width:100%;
+      padding:12px;
+      margin-top:10px;
+      border-radius:10px;
+      border:none;
+    }
     button {
       width:100%;
       padding:12px;
@@ -33,13 +40,6 @@
       border-radius:10px;
       background:#6c63ff;
       color:white;
-    }
-    textarea {
-      width:100%;
-      padding:12px;
-      margin-top:10px;
-      border-radius:10px;
-      border:none;
     }
     img {
       width:100%;
@@ -51,13 +51,21 @@
 
 <body>
 
+<!-- LOGIN -->
 <div class="container" id="loginPage">
   <div class="card">
-    <h2>🚀 AI Studio Pro</h2>
-    <button onclick="googleLogin()">Continue with Google</button>
+    <h2>🔐 Login / Register</h2>
+
+    <input type="email" id="email" placeholder="Email">
+    <input type="password" id="password" placeholder="Password">
+
+    <button onclick="register()">Create Account</button>
+    <button onclick="login()">Login</button>
+
   </div>
 </div>
 
+<!-- MAIN -->
 <div class="container" id="mainPage" style="display:none;">
   <div class="card">
 
@@ -82,8 +90,8 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/fireba
 
 import {
   getAuth,
-  GoogleAuthProvider,
-  signInWithPopup,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
   onAuthStateChanged,
   signOut,
   setPersistence,
@@ -110,37 +118,42 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
-const provider = new GoogleAuthProvider();
 
 let coins = 0;
 let userId = null;
 
-// 🔥 Make login stable
-setPersistence(auth, browserLocalPersistence);
+// 🔥 keep login after refresh
+await setPersistence(auth, browserLocalPersistence);
 
-// ✅ Google Login (Fixed)
-window.googleLogin = () => {
-  signInWithPopup(auth, provider)
-    .then(async (result) => {
+// REGISTER
+window.register = async () => {
+  const email = emailInput();
+  const pass = passInput();
 
-      const user = result.user;
-
-      // 👉 instantly show dashboard
-      loginPage.style.display="none";
-      mainPage.style.display="flex";
-
-      welcomeText.innerText = "Welcome " + user.email;
-
-      await loadUser(user);
-
-    })
-    .catch((error) => {
-      alert(error.message);
-    });
+  try {
+    await createUserWithEmailAndPassword(auth, email, pass);
+    alert("Account created!");
+  } catch (e) {
+    alert(e.message);
+  }
 };
 
+// LOGIN
+window.login = async () => {
+  const email = emailInput();
+  const pass = passInput();
+
+  try {
+    await signInWithEmailAndPassword(auth, email, pass);
+  } catch (e) {
+    alert(e.message);
+  }
+};
+
+// LOGOUT
 window.logout = () => signOut(auth);
 
+// USER DATA
 async function loadUser(user){
   userId = user.uid;
 
@@ -154,9 +167,10 @@ async function loadUser(user){
     coins = snap.data().coins;
   }
 
-  document.getElementById("coinText").innerText = "Coins: " + coins;
+  coinText.innerText = "Coins: " + coins;
 }
 
+// GENERATE
 window.generate = async () => {
 
   if(coins <= 0){
@@ -168,7 +182,7 @@ window.generate = async () => {
 
   const url = "https://image.pollinations.ai/prompt/" + encodeURIComponent(prompt);
 
-  document.getElementById("result").innerHTML += `
+  result.innerHTML += `
     <div style="position:relative;">
       <img src="${url}">
       <div style="position:absolute;bottom:10px;right:10px;display:flex;gap:10px;">
@@ -187,21 +201,19 @@ window.generate = async () => {
     coins: coins
   });
 
-  document.getElementById("coinText").innerText = "Coins: " + coins;
+  coinText.innerText = "Coins: " + coins;
 };
 
-function shareImage(url){
+// SHARE
+window.shareImage = (url) => {
   if(navigator.share){
-    navigator.share({
-      title:"AI Image",
-      url:url
-    });
+    navigator.share({ title:"AI Image", url });
   } else {
     alert("Share not supported");
   }
-}
+};
 
-// ✅ backup auth listener (auto login)
+// AUTH STATE
 onAuthStateChanged(auth, async (user)=>{
 
   if(user){
@@ -217,6 +229,14 @@ onAuthStateChanged(auth, async (user)=>{
   }
 
 });
+
+// helpers
+function emailInput(){
+  return document.getElementById("email").value;
+}
+function passInput(){
+  return document.getElementById("password").value;
+}
 
 </script>
 
