@@ -6,97 +6,67 @@
   <style>
     body {
       margin: 0;
-      font-family: 'Segoe UI', sans-serif;
-      background: linear-gradient(135deg, #667eea, #764ba2);
+      font-family: 'Segoe UI';
+      background: linear-gradient(135deg,#667eea,#764ba2);
     }
-
     .container {
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
-      min-height: 100vh;
-      padding-top: 60px;
+      display:flex;
+      justify-content:center;
+      align-items:flex-start;
+      min-height:100vh;
+      padding-top:60px;
     }
-
     .card {
-      background: rgba(255,255,255,0.15);
-      backdrop-filter: blur(15px);
-      padding: 25px;
-      border-radius: 20px;
-      width: 90%;
-      max-width: 600px;
-      text-align: center;
-      box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-      color: white;
+      background:rgba(255,255,255,0.15);
+      backdrop-filter:blur(15px);
+      padding:25px;
+      border-radius:20px;
+      width:90%;
+      max-width:600px;
+      color:white;
     }
-
-    input, textarea {
-      width: 100%;
-      padding: 12px;
-      margin: 8px 0;
-      border-radius: 10px;
-      border: none;
-      outline: none;
-    }
-
-    textarea { height: 140px; }
-
-    button {
-      width: 100%;
-      padding: 12px;
-      margin-top: 10px;
-      border: none;
-      border-radius: 10px;
-      background: #6c63ff;
-      color: white;
-      cursor: pointer;
-    }
-
-    .secondary { background: #ffffff33; }
-
-    .section {
-      margin-top: 20px;
-      padding: 15px;
-      background: rgba(255,255,255,0.1);
-      border-radius: 15px;
-    }
-
-    img {
-      width: 100%;
-      border-radius: 12px;
-      margin-top: 10px;
-    }
-
-    #menu {
-      display:none;
-      background:#000000cc;
-      padding:10px;
+    input,textarea {
+      width:100%;
+      padding:12px;
+      margin:8px 0;
       border-radius:10px;
-      margin-top:10px;
+      border:none;
     }
+    button {
+      width:100%;
+      padding:12px;
+      margin-top:10px;
+      border:none;
+      border-radius:10px;
+      background:#6c63ff;
+      color:white;
+    }
+    .secondary { background:#ffffff33; }
+    .section {
+      margin-top:20px;
+      padding:15px;
+      background:rgba(255,255,255,0.1);
+      border-radius:15px;
+    }
+    img { width:100%; margin-top:10px; border-radius:10px; }
+    #menu { display:none; background:#000000cc; padding:10px; border-radius:10px; }
   </style>
 </head>
 
 <body>
 
-<!-- LOGIN -->
 <div class="container" id="loginPage">
   <div class="card">
     <h2>🚀 AI Studio Pro</h2>
-
     <button onclick="googleLogin()">Continue with Google</button>
-
     <p>or</p>
-
     <input id="email" placeholder="Email">
-    <input id="password" type="password" placeholder="Password">
-
+    <input id="password" type="password">
     <button onclick="login()">Login</button>
     <button class="secondary" onclick="signup()">Create Account</button>
   </div>
 </div>
 
-<!-- MAIN -->
 <div class="container" id="mainPage" style="display:none;">
   <div class="card">
 
@@ -106,20 +76,15 @@
     </div>
 
     <div id="menu">
-      <button onclick="showHistory()">🕓 History</button>
       <button onclick="showCoins()">💰 Coins</button>
-      <button onclick="clearHistory()">❌ Clear</button>
       <button onclick="logout()">🚪 Logout</button>
     </div>
 
     <div class="section">
       <button onclick="showImageGen()">🎨 Image Generator</button>
-      <button onclick="showVideo()">🎬 Video Generator</button>
     </div>
 
     <div id="toolArea"></div>
-
-    <button class="secondary" onclick="downloadLast()">⬇️ Download Last Image</button>
 
   </div>
 </div>
@@ -128,8 +93,7 @@
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
-  getAuth,
-  GoogleAuthProvider,
+  getAuth, GoogleAuthProvider,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signInWithRedirect,
@@ -138,57 +102,71 @@ import {
   signOut
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-// ✅ CONFIG
+import {
+  getFirestore, doc, getDoc, setDoc, updateDoc
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
 const firebaseConfig = {
   apiKey: "AIzaSyC4zL8cYV8A6SxEX6Fm9MKT_SNUyD-pilg",
   authDomain: "free-ai-33698.firebaseapp.com",
   projectId: "free-ai-33698",
   storageBucket: "free-ai-33698.firebasestorage.app",
   messagingSenderId: "897121643606",
-  appId: "1:897121643606:web:7c21b45297758aa0df5ff7",
-  measurementId: "G-EPHYJLGYRC"
+  appId: "1:897121643606:web:7c21b45297758aa0df5ff7"
 };
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
+const db = getFirestore(app);
 const provider = new GoogleAuthProvider();
 
-// ✅ Redirect handle
-getRedirectResult(auth).catch(console.error);
+let coins = 0;
+let userId = null;
 
-let used = 0;
-let limit = 10;
-
-// MENU
-window.toggleMenu = () => {
-  const m = document.getElementById("menu");
-  m.style.display = m.style.display === "block" ? "none" : "block";
-};
+// REDIRECT
+getRedirectResult(auth);
 
 // LOGIN
 window.login = () => {
-  signInWithEmailAndPassword(auth, email.value, password.value)
-    .catch(e => alert(e.message));
+  signInWithEmailAndPassword(auth,email.value,password.value)
+  .catch(e=>alert(e.message));
 };
 
 window.signup = () => {
-  createUserWithEmailAndPassword(auth, email.value, password.value)
-    .catch(e => alert(e.message));
+  createUserWithEmailAndPassword(auth,email.value,password.value)
+  .catch(e=>alert(e.message));
 };
 
-// GOOGLE LOGIN
 window.googleLogin = () => {
-  signInWithRedirect(auth, provider);
+  signInWithRedirect(auth,provider);
 };
 
 window.logout = () => signOut(auth);
+
+// MENU
+window.toggleMenu = () => {
+  menu.style.display = menu.style.display=="block"?"none":"block";
+};
+
+// LOAD USER DATA
+async function loadUser(user){
+  userId = user.uid;
+  const ref = doc(db,"users",userId);
+  const snap = await getDoc(ref);
+
+  if(!snap.exists()){
+    await setDoc(ref,{coins:10});
+    coins = 10;
+  } else {
+    coins = snap.data().coins;
+  }
+}
 
 // IMAGE TOOL
 window.showImageGen = () => {
   toolArea.innerHTML = `
     <div class="section">
-      <h3>🎨 Image Generator</h3>
-      <p>Used: ${used}/${limit}</p>
+      <h3>Coins: ${coins}</h3>
       <textarea id="prompt"></textarea>
       <button onclick="generate()">Generate</button>
       <div id="result"></div>
@@ -196,64 +174,43 @@ window.showImageGen = () => {
   `;
 };
 
-window.generate = () => {
+window.generate = async () => {
+
+  if(coins <= 0){
+    alert("No coins left!");
+    return;
+  }
+
   const prompt = document.getElementById("prompt").value;
-  const url = "https://image.pollinations.ai/prompt/" + encodeURIComponent(prompt);
-
-  localStorage.setItem("lastImage", url);
-
-  let history = JSON.parse(localStorage.getItem("history")) || [];
-  history.unshift(url);
-  localStorage.setItem("history", JSON.stringify(history));
+  const url = "https://image.pollinations.ai/prompt/"+encodeURIComponent(prompt);
 
   document.getElementById("result").innerHTML = `<img src="${url}">`;
 
-  used++;
-};
+  coins--;
 
-// HISTORY
-window.showHistory = () => {
-  let history = JSON.parse(localStorage.getItem("history")) || [];
-  let html = "<h3>History</h3>";
-  history.forEach(img => html += `<img src="${img}">`);
-  toolArea.innerHTML = html;
+  await updateDoc(doc(db,"users",userId),{
+    coins: coins
+  });
+
+  showImageGen();
 };
 
 // COINS
 window.showCoins = () => {
-  toolArea.innerHTML = `<h3>Usage</h3><p>${used}/${limit}</p>`;
+  toolArea.innerHTML = `<h3>Coins: ${coins}</h3>`;
 };
 
-window.clearHistory = () => {
-  localStorage.removeItem("history");
-  alert("Cleared");
-};
+// AUTH
+onAuthStateChanged(auth, async user=>{
+  if(user){
+    loginPage.style.display="none";
+    mainPage.style.display="flex";
+    welcomeText.innerText="Welcome "+user.email;
 
-// DOWNLOAD
-window.downloadLast = () => {
-  const url = localStorage.getItem("lastImage");
-  if (!url) return alert("No image");
-
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "image.png";
-  a.click();
-};
-
-// VIDEO
-window.showVideo = () => {
-  toolArea.innerHTML = "<h3>🎬 Coming Soon</h3>";
-};
-
-// AUTH STATE
-onAuthStateChanged(auth, user => {
-  if (user) {
-    loginPage.style.display = "none";
-    mainPage.style.display = "flex";
-    welcomeText.innerText = "Welcome " + user.email;
+    await loadUser(user);
   } else {
-    loginPage.style.display = "flex";
-    mainPage.style.display = "none";
+    loginPage.style.display="flex";
+    mainPage.style.display="none";
   }
 });
 
