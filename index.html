@@ -1,6 +1,9 @@
-<!DOCTYPE html><html>
+<!DOCTYPE html>
+<html>
 <head>
-  <title>AI Studio Pro</title>  <style>
+  <title>AI Studio Pro</title>
+
+  <style>
     body {
       margin: 0;
       font-family: 'Segoe UI', sans-serif;
@@ -87,44 +90,56 @@
       100% { transform: rotate(360deg); }
     }
 
-  </style></head><body><div class="container" id="loginPage">
+  </style>
+</head>
+
+<body>
+
+<div class="container" id="loginPage">
   <div class="card">
-    <h2>🚀 AI Studio Pro</h2><button onclick="googleLogin()">Continue with Google</button>
+    <h2>🚀 AI Studio Pro</h2>
 
-<p>or</p>
+    <button onclick="googleLogin()">Continue with Google</button>
 
-<input type="email" id="email" placeholder="Email">
-<input type="password" id="password" placeholder="Password">
+    <p>or</p>
 
-<button onclick="login()">Login</button>
-<button class="secondary" onclick="signup()">Create Account</button>
+    <input type="email" id="email" placeholder="Email">
+    <input type="password" id="password" placeholder="Password">
 
+    <button onclick="login()">Login</button>
+    <button class="secondary" onclick="signup()">Create Account</button>
   </div>
-</div><div class="container" id="mainPage" style="display:none;">
-  <div class="card"><h2 id="welcomeText">Welcome</h2>
-<img id="profilePic" width="80" style="display:none; border-radius:50%;"><br>
-
-<div class="section">
-  <button onclick="showImageGen()">🎨 Image Generator</button>
-  <button onclick="showVideo()">🎬 Video Generator</button>
 </div>
 
-<div id="toolArea"></div>
+<div class="container" id="mainPage" style="display:none;">
+  <div class="card">
 
-<button class="secondary" onclick="logout()">Logout</button>
+    <h2 id="welcomeText">Welcome</h2>
+    <img id="profilePic" width="80" style="display:none; border-radius:50%;"><br>
+
+    <div class="section">
+      <button onclick="showImageGen()">🎨 Image Generator</button>
+      <button onclick="showVideo()">🎬 Video Generator</button>
+    </div>
+
+    <div id="toolArea"></div>
+
+    <button class="secondary" onclick="logout()">Logout</button>
 
   </div>
-</div><script type="module">
+</div>
+
+<script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
   getAuth,
-  signInWithRedirect,
   GoogleAuthProvider,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   onAuthStateChanged,
-  signOut
+  signOut,
+  signInWithPopup
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 const firebaseConfig = {
@@ -143,10 +158,13 @@ const provider = new GoogleAuthProvider();
 let limit = 10;
 let used = 0;
 
+// ✅ Google Login FIXED
 window.googleLogin = function() {
-  signInWithRedirect(auth, provider);
+  signInWithPopup(auth, provider)
+    .catch(err => alert(err.message));
 };
 
+// Email Login
 window.login = function() {
   const email = document.getElementById("email").value;
   const password = document.getElementById("password").value;
@@ -155,6 +173,7 @@ window.login = function() {
     .catch(err => alert(err.message));
 };
 
+// Signup
 window.signup = function() {
   const email = document.getElementById("email").value;
   const password = document.getElementById("password").value;
@@ -175,57 +194,89 @@ window.showImageGen = function() {
       <h3>🎨 Image Generator</h3>
       <p id="counter">Used: ${used} / ${limit}</p>
 
-      <textarea id="prompt" placeholder="Write detailed prompt here..."></textarea><button onclick="generate()">Generate Image</button>
+      <textarea id="prompt" placeholder="Write detailed prompt here..."></textarea>
 
-  <div id="result"></div>
-</div>
+      <button onclick="generate()">Generate Image</button>
 
-`; };
+      <div id="result"></div>
+    </div>
+  `;
+};
 
 window.generate = function() {
 
-if (used >= limit) { document.getElementById("result").innerHTML = "<p style='color:red;'>🚫 Daily limit reached</p>"; return; }
+  if (used >= limit) {
+    document.getElementById("result").innerHTML =
+      "<p style='color:red;'>🚫 Daily limit reached</p>";
+    return;
+  }
 
-const prompt = document.getElementById("prompt").value; const url = "https://image.pollinations.ai/prompt/" + encodeURIComponent(prompt);
+  const prompt = document.getElementById("prompt").value;
+  const url = "https://image.pollinations.ai/prompt/" + encodeURIComponent(prompt);
 
-document.getElementById("result").innerHTML = <div class="loader"></div> <p>Generating...</p>;
+  document.getElementById("result").innerHTML = `
+    <div class="loader"></div>
+    <p>Generating...</p>
+  `;
 
-setTimeout(() => { used++;
+  setTimeout(() => {
+    used++;
 
-document.getElementById("counter").innerText = `Used: ${used} / ${limit}`;
+    document.getElementById("counter").innerText = `Used: ${used} / ${limit}`;
 
-document.getElementById("result").innerHTML = `
-  <img src="${url}">
-  <button onclick="download('${url}')">⬇️ Download</button>
-`;
+    document.getElementById("result").innerHTML = `
+      <img src="${url}">
+      <button onclick="download('${url}')">⬇️ Download</button>
+    `;
+  }, 1500);
+};
 
-}, 1500); };
+window.download = async function(url) {
+  const res = await fetch(url);
+  const blob = await res.blob();
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "image.png";
+  a.click();
+};
 
-window.download = async function(url) { const res = await fetch(url); const blob = await res.blob(); const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "image.png"; a.click(); };
+// 🎬 Video Section
+window.showVideo = function() {
+  document.getElementById("toolArea").innerHTML = `
+    <div class="section">
+      <h3>🎬 Video Generator</h3>
 
-// 🎬 Video Section window.showVideo = function() { document.getElementById("toolArea").innerHTML = ` <div class="section"> <h3>🎬 Video Generator</h3>
+      <textarea placeholder="Describe your video..."></textarea>
 
-<textarea placeholder="Describe your video..."></textarea>
+      <button disabled style="background:#999;">Coming Soon</button>
 
-  <button disabled style="background:#999;">Coming Soon</button>
+      <p style="font-size:14px;">🚧 Video feature will be added soon</p>
+    </div>
+  `;
+};
 
-  <p style="font-size:14px;">🚧 Video feature will be added soon</p>
-</div>
+// Auth State
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    document.getElementById("loginPage").style.display = "none";
+    document.getElementById("mainPage").style.display = "flex";
 
-`; };
+    document.getElementById("welcomeText").innerText =
+      "Welcome " + (user.displayName || user.email);
 
-onAuthStateChanged(auth, (user) => { if (user) { document.getElementById("loginPage").style.display = "none"; document.getElementById("mainPage").style.display = "flex";
+    if (user.photoURL) {
+      const img = document.getElementById("profilePic");
+      img.src = user.photoURL;
+      img.style.display = "block";
+    }
 
-document.getElementById("welcomeText").innerText =
-  "Welcome " + (user.displayName || user.email);
+  } else {
+    document.getElementById("loginPage").style.display = "flex";
+    document.getElementById("mainPage").style.display = "none";
+  }
+});
 
-if (user.photoURL) {
-  const img = document.getElementById("profilePic");
-  img.src = user.photoURL;
-  img.style.display = "block";
-}
+</script>
 
-} else { document.getElementById("loginPage").style.display = "flex"; document.getElementById("mainPage").style.display = "none"; } });
-
-</script></body>
+</body>
 </html>
