@@ -199,7 +199,43 @@ window.generate = async () => {
   const prompt = document.getElementById("prompt").value;
   const url = "https://image.pollinations.ai/prompt/"+encodeURIComponent(prompt);
 
-  document.getElementById("result").innerHTML += `<img src="${url}">`;
+  document.getElementById("result").innerHTML += `
+  <div style="margin-top:10px; position:relative;">
+    
+    <img src="${url}" style="width:100%; border-radius:10px;">
+    
+    <div style="
+      position:absolute;
+      bottom:10px;
+      right:10px;
+      display:flex;
+      gap:8px;
+    ">
+
+      <!-- Download -->
+      <a href="${url}" download target="_blank"
+         style="
+           background:#000000aa;
+           padding:8px;
+           border-radius:50%;
+           text-decoration:none;
+           font-size:16px;
+         ">
+         ⬇️
+      </a>
+
+      <!-- Share -->
+      </button> onclick="shareImage('${url}')"
+        style="
+          background:#000000aa;
+          padding:8px;
+          border-radius:50%;
+          border:none;
+          color:white;
+          font-size:16px;
+        ">
+        📤
+      </
 
   history.push(url);
 
@@ -211,7 +247,16 @@ window.generate = async () => {
 
   document.getElementById("coinText").innerText = "Coins: " + coins;
 };
-
+function shareImage(url) {
+  if (navigator.share) {
+    navigator.share({
+      title: "AI Generated Image",
+      url: url
+    });
+  } else {
+    alert("Sharing not supported on this device");
+  }
+}
 window.showHistory = () => {
   let html = "<h3>History</h3>";
 
