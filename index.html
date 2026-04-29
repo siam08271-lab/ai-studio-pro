@@ -25,13 +25,6 @@
       max-width:600px;
       color:white;
     }
-    input,textarea {
-      width:100%;
-      padding:12px;
-      margin:8px 0;
-      border-radius:10px;
-      border:none;
-    }
     button {
       width:100%;
       padding:12px;
@@ -41,46 +34,27 @@
       background:#6c63ff;
       color:white;
     }
-    .section {
-      margin-top:20px;
-      padding:15px;
-      background:rgba(255,255,255,0.1);
-      border-radius:15px;
-    }
-    img { width:100%; margin-top:10px; border-radius:10px; }
-
-    #menu { display:none; background:#000000cc; padding:10px; border-radius:10px; }
-
-    #loading {
-      position:fixed;
-      top:0;
-      left:0;
+    textarea {
       width:100%;
-      height:100%;
-      background:#000;
-      color:white;
-      display:flex;
-      justify-content:center;
-      align-items:center;
-      z-index:9999;
-      font-size:20px;
+      padding:12px;
+      margin-top:10px;
+      border-radius:10px;
+      border:none;
+    }
+    img {
+      width:100%;
+      margin-top:10px;
+      border-radius:10px;
     }
   </style>
 </head>
 
 <body>
 
-<div id="loading">Loading...</div>
-
 <div class="container" id="loginPage">
   <div class="card">
     <h2>🚀 AI Studio Pro</h2>
     <button onclick="googleLogin()">Continue with Google</button>
-    <p>or</p>
-    <input id="email" placeholder="Email">
-    <input id="password" type="password">
-    <button onclick="login()">Login</button>
-    <button onclick="signup()">Create Account</button>
   </div>
 </div>
 
@@ -89,17 +63,15 @@
 
     <div style="display:flex;justify-content:space-between;">
       <h2 id="welcomeText"></h2>
-      <button onclick="toggleMenu()" style="width:auto;">⋮</button>
+      <button onclick="logout()" style="width:auto;">🚪</button>
     </div>
 
-    <div id="menu">
-      <button onclick="showCoins()">💰 Coins</button>
-      <button onclick="showImageGen()">🎨 Image Generator</button>
-      <button onclick="showHistory()">🖼 History</button>
-      <button onclick="logout()">🚪 Logout</button>
-    </div>
+    <h3 id="coinText"></h3>
 
-    <div id="toolArea"></div>
+    <textarea id="prompt" placeholder="Type prompt..."></textarea>
+    <button onclick="generate()">Generate</button>
+
+    <div id="result"></div>
 
   </div>
 </div>
@@ -107,18 +79,21 @@
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
 import {
-  getAuth, GoogleAuthProvider,
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  signInWithRedirect,
-  getRedirectResult,
+  getAuth,
+  GoogleAuthProvider,
+  signInWithPopup,
   onAuthStateChanged,
   signOut
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 import {
-  getFirestore, doc, getDoc, setDoc, updateDoc
+  getFirestore,
+  doc,
+  getDoc,
+  setDoc,
+  updateDoc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -137,32 +112,22 @@ const provider = new GoogleAuthProvider();
 
 let coins = 0;
 let userId = null;
-let history = [];
-
-getRedirectResult(auth);
-
-window.login = () => {
-  signInWithEmailAndPassword(auth,email.value,password.value)
-  .catch(e=>alert(e.message));
-};
-
-window.signup = () => {
-  createUserWithEmailAndPassword(auth,email.value,password.value)
-  .catch(e=>alert(e.message));
-};
 
 window.googleLogin = () => {
-  signInWithRedirect(auth,provider);
+  signInWithPopup(auth, provider)
+    .then((result) => {
+      console.log("Login success");
+    })
+    .catch((error) => {
+      alert(error.message);
+    });
 };
 
 window.logout = () => signOut(auth);
 
-window.toggleMenu = () => {
-  menu.style.display = menu.style.display=="block"?"none":"block";
-};
-
 async function loadUser(user){
   userId = user.uid;
+
   const ref = doc(db,"users",userId);
   const snap = await getDoc(ref);
 
@@ -172,18 +137,9 @@ async function loadUser(user){
   } else {
     coins = snap.data().coins;
   }
-}
 
-window.showImageGen = () => {
-  toolArea.innerHTML = `
-    <div class="section">
-      <h3 id="coinText">Coins: ${coins}</h3>
-      <textarea id="prompt" placeholder="Type prompt..."></textarea>
-      <button onclick="generate()">Generate</button>
-      <div id="result"></div>
-    </div>
-  `;
-};
+  document.getElementById("coinText").innerText = "Coins: " + coins;
+}
 
 window.generate = async () => {
 
@@ -193,36 +149,21 @@ window.generate = async () => {
   }
 
   const prompt = document.getElementById("prompt").value;
-  const url = "https://image.pollinations.ai/prompt/"+encodeURIComponent(prompt);
+
+  const url = "https://image.pollinations.ai/prompt/" + encodeURIComponent(prompt);
 
   document.getElementById("result").innerHTML += `
-  <div style="margin-top:10px; position:relative;">
-    
-    <img src="${url}">
-    
-    <div style="
-      position:absolute;
-      bottom:10px;
-      right:10px;
-      display:flex;
-      gap:8px;
-    ">
+    <div style="position:relative;">
+      <img src="${url}">
+      <div style="position:absolute;bottom:10px;right:10px;display:flex;gap:10px;">
+        <a href="${url}" download target="_blank"
+        style="background:#000000aa;padding:8px;border-radius:50%;">⬇️</a>
 
-      <a href="${url}" download target="_blank"
-         style="background:#000000aa;padding:8px;border-radius:50%;">
-         ⬇️
-      </a>
-
-      <button onclick="shareImage('${url}')"
-        style="background:#000000aa;padding:8px;border-radius:50%;border:none;color:white;">
-        📤
-      </button>
-
+        <button onclick="shareImage('${url}')"
+        style="background:#000000aa;padding:8px;border:none;border-radius:50%;color:white;">📤</button>
+      </div>
     </div>
-  </div>
   `;
-
-  history.push(url);
 
   coins--;
 
@@ -233,43 +174,31 @@ window.generate = async () => {
   document.getElementById("coinText").innerText = "Coins: " + coins;
 };
 
-function shareImage(url) {
-  if (navigator.share) {
+function shareImage(url){
+  if(navigator.share){
     navigator.share({
-      title: "AI Generated Image",
-      url: url
+      title:"AI Image",
+      url:url
     });
   } else {
-    alert("Sharing not supported");
+    alert("Share not supported");
   }
 }
 
-window.showHistory = () => {
-  let html = "<h3>History</h3>";
-  history.forEach(img=>{
-    html += `<img src="${img}">`;
-  });
-  toolArea.innerHTML = html;
-};
-
-window.showCoins = () => {
-  toolArea.innerHTML = `<h3>Coins: ${coins}</h3>`;
-};
-
-onAuthStateChanged(auth, async user=>{
-
-  document.getElementById("loading").style.display = "none";
+onAuthStateChanged(auth, async (user)=>{
 
   if(user){
     loginPage.style.display="none";
     mainPage.style.display="flex";
-    welcomeText.innerText="Welcome "+user.email;
+
+    welcomeText.innerText = "Welcome " + user.email;
 
     await loadUser(user);
   } else {
     loginPage.style.display="flex";
     mainPage.style.display="none";
   }
+
 });
 
 </script>
