@@ -85,7 +85,9 @@ import {
   GoogleAuthProvider,
   signInWithPopup,
   onAuthStateChanged,
-  signOut
+  signOut,
+  setPersistence,
+  browserLocalPersistence
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 import {
@@ -113,10 +115,24 @@ const provider = new GoogleAuthProvider();
 let coins = 0;
 let userId = null;
 
+// 🔥 Make login stable
+setPersistence(auth, browserLocalPersistence);
+
+// ✅ Google Login (Fixed)
 window.googleLogin = () => {
   signInWithPopup(auth, provider)
-    .then((result) => {
-      console.log("Login success");
+    .then(async (result) => {
+
+      const user = result.user;
+
+      // 👉 instantly show dashboard
+      loginPage.style.display="none";
+      mainPage.style.display="flex";
+
+      welcomeText.innerText = "Welcome " + user.email;
+
+      await loadUser(user);
+
     })
     .catch((error) => {
       alert(error.message);
@@ -185,6 +201,7 @@ function shareImage(url){
   }
 }
 
+// ✅ backup auth listener (auto login)
 onAuthStateChanged(auth, async (user)=>{
 
   if(user){
