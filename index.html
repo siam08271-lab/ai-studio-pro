@@ -1,11 +1,13 @@
-<!DOCTYPE html><html>
+<!DOCTYPE html>
+<html>
 <head>
-  <title>AI Studio Pro</title>  <style>
+  <title>AI Studio Pro</title>
+
+  <style>
     body {
       margin: 0;
       font-family: 'Segoe UI', sans-serif;
       background: linear-gradient(135deg, #667eea, #764ba2);
-      color: #333;
     }
 
     .container {
@@ -22,7 +24,7 @@
       padding: 25px;
       border-radius: 20px;
       width: 90%;
-      max-width: 520px;
+      max-width: 600px;
       text-align: center;
       box-shadow: 0 10px 40px rgba(0,0,0,0.3);
       color: white;
@@ -35,12 +37,10 @@
       border-radius: 10px;
       border: none;
       outline: none;
-      font-size: 14px;
     }
 
     textarea {
-      height: 120px;
-      resize: none;
+      height: 140px;
     }
 
     button {
@@ -51,18 +51,11 @@
       border-radius: 10px;
       background: #6c63ff;
       color: white;
-      font-weight: bold;
       cursor: pointer;
     }
 
     .secondary {
       background: #ffffff33;
-    }
-
-    img {
-      border-radius: 15px;
-      width: 100%;
-      margin-top: 15px;
     }
 
     .section {
@@ -72,59 +65,68 @@
       border-radius: 15px;
     }
 
+    img {
+      width: 100%;
+      border-radius: 12px;
+      margin-top: 10px;
+    }
+
     #menu {
       display:none;
-      margin-top:10px;
       background:#000000cc;
-      padding:15px;
-      border-radius:15px;
+      padding:10px;
+      border-radius:10px;
+      margin-top:10px;
     }
+  </style>
+</head>
 
-    #menu button {
-      width:100%;
-      margin:6px 0;
-    }
+<body>
 
-  </style></head><body><div class="container" id="loginPage">
+<div class="container" id="loginPage">
   <div class="card">
-    <h2>🚀 AI Studio Pro</h2><button onclick="googleLogin()">Continue with Google</button>
+    <h2>🚀 AI Studio Pro</h2>
 
-<p>or</p>
+    <button onclick="googleLogin()">Continue with Google</button>
 
-<input type="email" id="email" placeholder="Email">
-<input type="password" id="password" placeholder="Password">
+    <p>or</p>
 
-<button onclick="login()">Login</button>
-<button class="secondary" onclick="signup()">Create Account</button>
+    <input id="email" placeholder="Email">
+    <input id="password" type="password" placeholder="Password">
+
+    <button onclick="login()">Login</button>
+    <button class="secondary" onclick="signup()">Create Account</button>
+  </div>
+</div>
+
+<div class="container" id="mainPage" style="display:none;">
+  <div class="card">
+
+    <div style="display:flex;justify-content:space-between;">
+      <h2 id="welcomeText"></h2>
+      <button onclick="toggleMenu()" style="width:auto;">⋮</button>
+    </div>
+
+    <div id="menu">
+      <button onclick="showHistory()">🕓 History</button>
+      <button onclick="showCoins()">💰 Coins</button>
+      <button onclick="clearHistory()">❌ Clear</button>
+      <button onclick="logout()">🚪 Logout</button>
+    </div>
+
+    <div class="section">
+      <button onclick="showImageGen()">🎨 Image Generator</button>
+      <button onclick="showVideo()">🎬 Video Generator</button>
+    </div>
+
+    <div id="toolArea"></div>
+
+    <button class="secondary" onclick="downloadLast()">⬇️ Download Last Image</button>
 
   </div>
-</div><div class="container" id="mainPage" style="display:none;">
-  <div class="card"><div style="display:flex; justify-content:space-between; align-items:center;">
-  <h2 id="welcomeText">Welcome</h2>
-  <button onclick="toggleMenu()" style="width:auto;">⋮</button>
 </div>
 
-<div id="menu">
-  <button onclick="showHistory()">🕓 History</button>
-  <button onclick="showCoins()">💰 Coins / Limit</button>
-  <button onclick="showSettings()">⚙️ Settings</button>
-  <button onclick="clearHistory()" style="background:#ff4444;">❌ Clear History</button>
-  <button onclick="logout()" style="background:#ff8800;">🚪 Logout</button>
-</div>
-
-<img id="profilePic" width="80" style="display:none; border-radius:50%;"><br>
-
-<div class="section">
-  <button onclick="showImageGen()">🎨 Image Generator</button>
-  <button onclick="showVideo()">🎬 Video Generator</button>
-</div>
-
-<div id="toolArea"></div>
-
-<button class="secondary" onclick="downloadLast()">⬇️ Download Last Image</button>
-
-  </div>
-</div><script type="module">
+<script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
@@ -132,88 +134,121 @@ import {
   GoogleAuthProvider,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
+  signInWithPopup,
   onAuthStateChanged,
-  signOut,
-  signInWithPopup
+  signOut
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyC4zL8cYV8A6SxEX6Fm9MKT_SNUyD-pilg",
-  authDomain: "free-ai-33698.firebaseapp.com",
-  projectId: "free-ai-33698",
-  storageBucket: "free-ai-33698.firebasestorage.app",
-  messagingSenderId: "897121643606",
-  appId: "1:897121643606:web:7c21b45297758aa0df5ff7"
-};
+const app = initializeApp({
+  apiKey: "AIzaSyC...",
+  authDomain: "free-ai-33698.firebaseapp.com"
+});
 
-const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 
-let limit = 10;
 let used = 0;
+let limit = 10;
 
-function toggleMenu(){
+window.toggleMenu = () => {
   const m = document.getElementById("menu");
-  m.style.display = m.style.display === "none" ? "block" : "none";
-}
-
-window.googleLogin = function() {
-  signInWithPopup(auth, provider).catch(err => alert(err.message));
+  m.style.display = m.style.display === "block" ? "none" : "block";
 };
 
-window.login = function() {
-  signInWithEmailAndPassword(auth,
-    email.value,
-    password.value
-  ).catch(err => alert(err.message));
+window.login = () => {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+
+  signInWithEmailAndPassword(auth, email, password)
+    .catch(e => alert(e.message));
 };
 
-window.signup = function() {
-  createUserWithEmailAndPassword(auth,
-    email.value,
-    password.value
-  ).catch(err => alert(err.message));
+window.signup = () => {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+
+  createUserWithEmailAndPassword(auth, email, password)
+    .catch(e => alert(e.message));
 };
 
-window.logout = function() { signOut(auth); };
+window.googleLogin = () => {
+  signInWithPopup(auth, provider)
+    .catch(e => alert(e.message));
+};
 
-window.showImageGen = function() {
+window.logout = () => signOut(auth);
+
+window.showImageGen = () => {
   document.getElementById("toolArea").innerHTML = `
     <div class="section">
       <h3>🎨 Image Generator</h3>
-      <p id="counter">Used: ${used} / ${limit}</p>
+      <p>Used: ${used}/${limit}</p>
+      <textarea id="prompt" placeholder="Write prompt..."></textarea>
+      <button onclick="generate()">Generate</button>
+      <div id="result"></div>
+    </div>
+  `;
+};
 
-      <textarea id="prompt"></textarea><button onclick="generate()">Generate</button>
-  <div id="result"></div>
-</div>
+window.generate = () => {
+  const prompt = document.getElementById("prompt").value;
+  const url = "https://image.pollinations.ai/prompt/" + encodeURIComponent(prompt);
 
-`; };
+  localStorage.setItem("lastImage", url);
 
-window.generate = function(){ const prompt = document.getElementById("prompt").value; const url = "https://image.pollinations.ai/prompt/" + encodeURIComponent(prompt);
+  let history = JSON.parse(localStorage.getItem("history")) || [];
+  history.unshift(url);
+  localStorage.setItem("history", JSON.stringify(history));
 
-let history = JSON.parse(localStorage.getItem("history")) || []; history.unshift(url); localStorage.setItem("history", JSON.stringify(history));
+  document.getElementById("result").innerHTML = `<img src="${url}">`;
 
-// save last image localStorage.setItem("lastImage", url);
+  used++;
+};
 
-used++;
+window.showHistory = () => {
+  let history = JSON.parse(localStorage.getItem("history")) || [];
+  let html = "<h3>History</h3>";
+  history.forEach(img => {
+    html += `<img src="${img}">`;
+  });
+  toolArea.innerHTML = html;
+};
 
-result.innerHTML = <img src="${url}">; };
+window.showCoins = () => {
+  toolArea.innerHTML = `<h3>Usage</h3><p>${used}/${limit}</p>`;
+};
 
-function showHistory(){ let history = JSON.parse(localStorage.getItem("history")) || []; let html = "<h3>History</h3>"; history.forEach(img=> html += <img src="${img}">); toolArea.innerHTML = html; }
+window.clearHistory = () => {
+  localStorage.removeItem("history");
+  alert("Cleared");
+};
 
-function showCoins(){ toolArea.innerHTML = <h3>Usage</h3><p>${used}/${limit}</p>; }
+window.downloadLast = () => {
+  const url = localStorage.getItem("lastImage");
+  if (!url) return alert("No image");
 
-function showSettings(){ toolArea.innerHTML = <h3>Settings</h3><p>Coming soon</p>; }
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "image.png";
+  a.click();
+};
 
-function clearHistory(){ localStorage.removeItem("history"); alert("Cleared"); }
+window.showVideo = () => {
+  toolArea.innerHTML = "<h3>🎬 Coming Soon</h3>";
+};
 
-function downloadLast(){ const url = localStorage.getItem("lastImage"); if(!url){ alert("No image yet"); return; } const a = document.createElement("a"); a.href = url; a.download = "image.png"; a.click(); }
-
-window.showVideo = function(){ toolArea.innerHTML = "Coming soon"; };
-
-onAuthStateChanged(auth, (user)=>{ if(user){ loginPage.style.display="none"; mainPage.style.display="flex"; welcomeText.innerText="Welcome " + user.email; }else{ loginPage.style.display="flex"; mainPage.style.display="none"; } });
+onAuthStateChanged(auth, user => {
+  if (user) {
+    loginPage.style.display = "none";
+    mainPage.style.display = "flex";
+    welcomeText.innerText = "Welcome " + user.email;
+  } else {
+    loginPage.style.display = "flex";
+    mainPage.style.display = "none";
+  }
+});
 
 </script>
+
 </body>
 </html>
