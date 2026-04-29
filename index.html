@@ -2,52 +2,103 @@
 <html>
 <head>
   <title>AI Studio Pro</title>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+    }
+
+    .container {
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      height: 100vh;
+      padding-top: 80px;
+    }
+
+    .card {
+      background: white;
+      padding: 25px;
+      border-radius: 20px;
+      width: 320px;
+      text-align: center;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+
+    input {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      border: none;
+      border-radius: 10px;
+      background: #667eea;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #5a67d8;
+    }
+
+    .secondary {
+      background: #eee;
+      color: #333;
+    }
+  </style>
 </head>
 
 <body>
 
-  <!-- 🔹 Login Page -->
-  <div id="loginPage">
-    <h2>Login</h2>
+  <!-- LOGIN -->
+  <div class="container" id="loginPage">
+    <div class="card">
+      <h2>🔐 Login</h2>
 
-    <button onclick="googleLogin()">Login with Google</button>
+      <button onclick="googleLogin()">Login with Google</button>
 
-    <br><br>
+      <p>or</p>
 
-    <input type="email" id="email" placeholder="Email"><br><br>
-    <input type="password" id="password" placeholder="Password"><br><br>
+      <input type="email" id="email" placeholder="Email">
+      <input type="password" id="password" placeholder="Password">
 
-    <button onclick="emailLogin()">Login with Email</button>
+      <button onclick="emailLogin()">Login with Email</button>
+    </div>
   </div>
 
-  <!-- 🔹 Main Page -->
-  <div id="mainPage" style="display:none; text-align:center;">
-    
-    <h2 id="welcomeText">Welcome User 🎉</h2>
+  <!-- MAIN -->
+  <div class="container" id="mainPage" style="display:none;">
+    <div class="card">
 
-    <img id="profilePic" src="" width="100" style="border-radius:50%; display:none;"><br><br>
+      <h2 id="welcomeText">Welcome 🎉</h2>
+      <img id="profilePic" width="80" style="display:none;"><br><br>
 
-    <h3>🚀 AI Tools</h3>
+      <button onclick="showImageGen()">🎨 Generate Image</button>
+      <button onclick="showVideoGen()">🎬 Generate Video</button>
 
-    <button onclick="showImageGen()">🎨 Generate Image</button>
-    <button onclick="showVideoGen()">🎬 Generate Video</button>
+      <div id="toolArea"></div>
 
-    <br><br>
+      <button class="secondary" onclick="logout()">Logout</button>
 
-    <div id="toolArea"></div>
-
-    <br>
-
-    <button onclick="logout()">Logout</button>
+    </div>
   </div>
-
 
   <script type="module">
 
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import { 
       getAuth, 
-      signInWithPopup, 
+      signInWithRedirect,
       GoogleAuthProvider,
       signInWithEmailAndPassword,
       onAuthStateChanged,
@@ -64,17 +115,14 @@
     };
 
     const app = initializeApp(firebaseConfig);
-    const auth = getAuth();
-
+    const auth = getAuth(app);
     const provider = new GoogleAuthProvider();
 
-    // Google Login
+    // LOGIN
     window.googleLogin = function() {
-      signInWithPopup(auth, provider)
-        .catch(err => alert(err.message));
+      signInWithRedirect(auth, provider);
     };
 
-    // Email Login
     window.emailLogin = function() {
       const email = document.getElementById("email").value;
       const password = document.getElementById("password").value;
@@ -83,116 +131,56 @@
         .catch(err => alert(err.message));
     };
 
-    // Logout
     window.logout = function() {
       signOut(auth);
     };
 
-    // 🔥 Tool UI Functions
+    // IMAGE TOOL
     window.showImageGen = function() {
       document.getElementById("toolArea").innerHTML = `
         <h3>🎨 Image Generator</h3>
-        <input id="imgPrompt" placeholder="Enter prompt"><br><br>
+        <input id="imgPrompt" placeholder="Enter prompt"><br>
         <button onclick="generateImage()">Generate</button>
         <div id="imgResult"></div>
       `;
     };
 
-    window.showVideoGen = function() {
-      document.getElementById("toolArea").innerHTML = `
-        <h3>🎬 Video Generator</h3>
-        <input id="vidPrompt" placeholder="Enter prompt"><br><br>
-        <button onclick="generateVideo()">Generate</button>
-        <div id="vidResult"></div>
+    window.generateImage = function() {
+      const prompt = document.getElementById("imgPrompt").value;
+      const url = "https://image.pollinations.ai/prompt/" + encodeURIComponent(prompt);
+
+      document.getElementById("imgResult").innerHTML = `
+        <p>⏳ Generating...</p>
+        <img src="${url}" width="100%"><br><br>
+        <button onclick="downloadImage('${url}')">⬇️ Download</button>
       `;
     };
 
-    // Demo functions (next step এ real API বসাবো)
-    window.generateImage = async function() {
-  const prompt = document.getElementById("imgPrompt").value;
+    window.downloadImage = async function(url) {
+      const res = await fetch(url);
+      const blob = await res.blob();
 
-  document.getElementById("imgResult").innerHTML = "⏳ Generating Image...";
-
-  try {
-    const res = await fetch("https://image.pollinations.ai/prompt/" + encodeURIComponent(prompt));
-    
-    const imgUrl = res.url;
-
-    document.getElementById("imgResult").innerHTML = `
-  <img src="${imgUrl}" width="300"><br><br>
-  <button onclick="downloadImage('${imgUrl}')">⬇️ Download Image</button>
-`;
-  } catch (err) {
-    document.getElementById("imgResult").innerHTML = "❌ Error generating image";
-  }
-};
-    window.generateVideo = async function() {
-  const prompt = document.getElementById("vidPrompt").value;
-
-  document.getElementById("vidResult").innerHTML = "⏳ Generating Video... (wait 30-60 sec)";
-
-  try {
-    const res = await fetch("https://api.replicate.com/v1/predictions", {
-  method: "POST",
-  headers: {
-  "Authorization": "Bearer YOUR_API_KEY",
-  "Content-Type": "application/json"
-},
-  body: JSON.stringify({
-    version: "6292c1d1b2c7d7c5f4c3b6e0b8b7e3c9f6a1c2d3e4f5a6b7c8d9e0f1",
-    input: {
-      prompt: prompt
-    }
-  })
-});
-
-    const data = await res.json();
-
-    const checkResult = async () => {
-      const check = await fetch(data.urls.get, {
-        headers: {
-      "Authorization": "Bearer YOUR_API_KEY"
-      }
-    
-      const result = await check.json();
-
-      if (result.status === "succeeded") {
-        const videoUrl = result.output[0];
-
-        document.getElementById("vidResult").innerHTML = `
-          <video src="${videoUrl}" controls width="300"></video><br><br>
-          <a href="${videoUrl}" download>⬇️ Download Video</a>
-        `;
-      } else if (result.status === "failed") {
-        document.getElementById("vidResult").innerHTML = "❌ Failed to generate video";
-      } else {
-        setTimeout(checkResult, 3000);
-      }
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "ai-image.png";
+      a.click();
     };
 
-    checkResult();
+    // VIDEO TOOL (SAFE VERSION)
+    window.showVideoGen = function() {
+      document.getElementById("toolArea").innerHTML = `
+        <h3>🎬 Video Generator</h3>
+        <p>🚧 Coming Soon...</p>
+      `;
+    };
 
-  } catch (err) {
-    document.getElementById("vidResult").innerHTML = "❌ Error generating video";
-  }
-};
-window.downloadImage = async function(url) {
-  const res = await fetch(url);
-  const blob = await res.blob();
-
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = "ai-image.png";
-  a.click();
-};
-    // 🔥 User detect + UI update
+    // AUTH STATE
     onAuthStateChanged(auth, (user) => {
       if (user) {
         document.getElementById("loginPage").style.display = "none";
-        document.getElementById("mainPage").style.display = "block";
+        document.getElementById("mainPage").style.display = "flex";
 
-        const name = user.displayName || "User";
-        document.getElementById("welcomeText").innerText = "Welcome " + name + " 🎉";
+        document.getElementById("welcomeText").innerText = "Welcome " + (user.displayName || "User");
 
         if (user.photoURL) {
           const img = document.getElementById("profilePic");
@@ -201,7 +189,7 @@ window.downloadImage = async function(url) {
         }
 
       } else {
-        document.getElementById("loginPage").style.display = "block";
+        document.getElementById("loginPage").style.display = "flex";
         document.getElementById("mainPage").style.display = "none";
       }
     });
