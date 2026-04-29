@@ -50,10 +50,27 @@
     }
     img { width:100%; margin-top:10px; border-radius:10px; }
     #menu { display:none; background:#000000cc; padding:10px; border-radius:10px; }
+
+    #loading {
+      position:fixed;
+      top:0;
+      left:0;
+      width:100%;
+      height:100%;
+      background:#000;
+      color:white;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      z-index:9999;
+      font-size:20px;
+    }
   </style>
 </head>
 
 <body>
+
+<div id="loading">Loading...</div>
 
 <div class="container" id="loginPage">
   <div class="card">
@@ -182,7 +199,6 @@ window.generate = async () => {
   const prompt = document.getElementById("prompt").value;
   const url = "https://image.pollinations.ai/prompt/"+encodeURIComponent(prompt);
 
-  // ADD image (not remove previous)
   document.getElementById("result").innerHTML += `<img src="${url}">`;
 
   history.push(url);
@@ -211,6 +227,9 @@ window.showCoins = () => {
 };
 
 onAuthStateChanged(auth, async user=>{
+
+  document.getElementById("loading").style.display = "none";
+
   if(user){
     loginPage.style.display="none";
     mainPage.style.display="flex";
