@@ -41,7 +41,6 @@
       background:#6c63ff;
       color:white;
     }
-    .secondary { background:#ffffff33; }
     .section {
       margin-top:20px;
       padding:15px;
@@ -49,6 +48,7 @@
       border-radius:15px;
     }
     img { width:100%; margin-top:10px; border-radius:10px; }
+
     #menu { display:none; background:#000000cc; padding:10px; border-radius:10px; }
 
     #loading {
@@ -80,7 +80,7 @@
     <input id="email" placeholder="Email">
     <input id="password" type="password">
     <button onclick="login()">Login</button>
-    <button class="secondary" onclick="signup()">Create Account</button>
+    <button onclick="signup()">Create Account</button>
   </div>
 </div>
 
@@ -97,10 +97,6 @@
       <button onclick="showImageGen()">🎨 Image Generator</button>
       <button onclick="showHistory()">🖼 History</button>
       <button onclick="logout()">🚪 Logout</button>
-    </div>
-
-    <div class="section">
-      <button onclick="showImageGen()">🎨 Image Generator</button>
     </div>
 
     <div id="toolArea"></div>
@@ -202,7 +198,7 @@ window.generate = async () => {
   document.getElementById("result").innerHTML += `
   <div style="margin-top:10px; position:relative;">
     
-    <img src="${url}" style="width:100%; border-radius:10px;">
+    <img src="${url}">
     
     <div style="
       position:absolute;
@@ -212,30 +208,19 @@ window.generate = async () => {
       gap:8px;
     ">
 
-      <!-- Download -->
       <a href="${url}" download target="_blank"
-         style="
-           background:#000000aa;
-           padding:8px;
-           border-radius:50%;
-           text-decoration:none;
-           font-size:16px;
-         ">
+         style="background:#000000aa;padding:8px;border-radius:50%;">
          ⬇️
       </a>
 
-      <!-- Share -->
-      </button> onclick="shareImage('${url}')"
-        style="
-          background:#000000aa;
-          padding:8px;
-          border-radius:50%;
-          border:none;
-          color:white;
-          font-size:16px;
-        ">
+      <button onclick="shareImage('${url}')"
+        style="background:#000000aa;padding:8px;border-radius:50%;border:none;color:white;">
         📤
-      </
+      </button>
+
+    </div>
+  </div>
+  `;
 
   history.push(url);
 
@@ -247,6 +232,7 @@ window.generate = async () => {
 
   document.getElementById("coinText").innerText = "Coins: " + coins;
 };
+
 function shareImage(url) {
   if (navigator.share) {
     navigator.share({
@@ -254,16 +240,15 @@ function shareImage(url) {
       url: url
     });
   } else {
-    alert("Sharing not supported on this device");
+    alert("Sharing not supported");
   }
 }
+
 window.showHistory = () => {
   let html = "<h3>History</h3>";
-
   history.forEach(img=>{
     html += `<img src="${img}">`;
   });
-
   toolArea.innerHTML = html;
 };
 
